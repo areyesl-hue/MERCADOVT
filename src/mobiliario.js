@@ -266,7 +266,7 @@ registrarColision(
 
 
     // ============================================================
-    // 05. PANADERÍA
+    // 05. PANADERÍA: PAN, PAYS Y PASTELES
     // ============================================================
 
     function crearMueblePanaderia(padre, nombre, x, z) {
@@ -275,7 +275,7 @@ registrarColision(
         const ancho = 3.8;
         const fondo = 1.65;
 
-        // Base inferior de madera
+        // Base inferior
         caja(g, 'Base_inferior', 0, 0.12, 0,
             ancho, 0.24, fondo, mat.madera);
 
@@ -286,7 +286,7 @@ registrarColision(
         caja(g, 'Panel_trasero', 0, 1.35, -fondo / 2 + 0.04,
             ancho, 2.45, 0.10, mat.madera);
 
-        // Laterales decorativos
+        // Laterales
         for (const dx of [-ancho / 2 + 0.08, ancho / 2 - 0.08]) {
             caja(g, 'Lateral_madera', dx, 1.20, 0,
                 0.16, 2.15, fondo, mat.maderaClara);
@@ -308,13 +308,11 @@ registrarColision(
                 ancho - 0.40, 0.09, nivel.profundidad,
                 mat.maderaClara);
 
-            // Superficie metálica para las charolas
             caja(g, `Superficie_charolas_${i + 1}`,
                 0, nivel.y + 0.055, nivel.z,
                 ancho - 0.52, 0.025, nivel.profundidad - 0.12,
                 mat.acero);
 
-            // Borde frontal de la repisa
             caja(g, `Borde_repisa_${i + 1}`,
                 0, nivel.y + 0.11,
                 nivel.z + nivel.profundidad / 2,
@@ -322,7 +320,7 @@ registrarColision(
                 mat.madera);
         });
 
-        // Divisiones para separar los tipos de pan
+        // Separadores de charolas
         for (const y of [0.72, 1.22, 1.72]) {
             for (const dx of [-1.0, 0, 1.0]) {
                 caja(g, 'Separador_charola',
@@ -332,7 +330,7 @@ registrarColision(
             }
         }
 
-        // Soportes decorativos superiores
+        // Soportes superiores
         for (const dx of [-1.65, 1.65]) {
             caja(g, 'Soporte_superior',
                 dx, 2.45, -0.55,
@@ -340,6 +338,7 @@ registrarColision(
                 mat.madera);
         }
 
+        // Letrero
         caja(g, 'Marco_letrero',
             0, 2.75, -0.55,
             3.45, 0.55, 0.12,
@@ -350,13 +349,12 @@ registrarColision(
             3.20, 0.36, 0.035,
             mat.naranja);
 
-        // Iluminación decorativa superior
         caja(g, 'Luz_exhibidor',
             0, 2.42, 0.30,
             3.15, 0.07, 0.10,
             mat.luz);
 
-        // Patas y soportes inferiores
+        // Patas
         for (const dx of [-1.55, 1.55]) {
             for (const dz of [-0.58, 0.58]) {
                 caja(g, 'Pata',
@@ -366,7 +364,6 @@ registrarColision(
             }
         }
 
-        // Datos para colocar los productos de panadería
         g.userData.nivelesProducto = [0.76, 1.26, 1.76];
         g.userData.superficieProductoY = [0.76, 1.26, 1.76];
         g.userData.ancho = ancho - 0.50;
@@ -375,9 +372,7 @@ registrarColision(
         g.userData.frenteZ = fondo / 2;
 
         registrarColision(
-            nombre,
-            x,
-            z,
+            nombre, x, z,
             ancho + 0.15,
             fondo + 0.15,
             { tipo: 'panaderia' }
@@ -386,144 +381,177 @@ registrarColision(
         return g;
     }
 
-function crearVitrinaPasteles(padre, nombre, x, z) {
-    const g = grupo(nombre, padre, x, z);
+    // ============================================================
+    // VITRINA REFRIGERADA PARA PAYS Y PASTELES
+    // ============================================================
 
-    const ancho = 2.8;
-    const alto = 1.85;
-    const fondo = 1.35;
+    function crearVitrinaPasteles(padre, nombre, x, z) {
+        const g = grupo(nombre, padre, x, z);
 
-    // Base refrigerada
-    caja(g, 'Base_refrigerada',
-        0, 0.30, 0,
-        ancho, 0.60, fondo,
-        mat.blanco
-    );
+        const ancho = 2.8;
+        const fondo = 1.35;
 
-    caja(g, 'Zocalo_inferior',
-        0, 0.08, 0,
-        ancho + 0.05, 0.16, fondo + 0.05,
-        mat.estructura
-    );
+        // Cristal transparente exclusivo de esta vitrina
+        const cristalPasteles = new THREE.MeshPhysicalMaterial({
+            color: 0xd9f5ff,
+            transparent: true,
+            opacity: 0.20,
+            roughness: 0.12,
+            metalness: 0.05,
+            transmission: 0.15,
+            depthWrite: false
+        });
 
-    // Panel frontal decorativo
-    caja(g, 'Panel_frontal',
-        0, 0.30, fondo / 2 + 0.015,
-        ancho - 0.18, 0.32, 0.035,
-        mat.azulOscuro
-    );
-
-    // Cubierta inferior
-    caja(g, 'Piso_vitrina',
-        0, 0.65, 0,
-        ancho, 0.10, fondo,
-        mat.acero
-    );
-
-    // Pared trasera
-    caja(g, 'Cristal_trasero',
-        0, 1.25, -fondo / 2 + 0.035,
-        ancho, 1.15, 0.055,
-        mat.cristal
-    );
-
-    // Laterales transparentes
-    for (const dx of [-ancho / 2 + 0.035, ancho / 2 - 0.035]) {
-        caja(g, 'Cristal_lateral',
-            dx, 1.25, 0,
-            0.055, 1.15, fondo,
-            mat.cristal
+        // Base refrigerada
+        caja(g, 'Base_refrigerada',
+            0, 0.30, 0,
+            ancho, 0.60, fondo,
+            mat.blanco
         );
-    }
 
-    // Marco superior
-    caja(g, 'Marco_superior',
-        0, alto, 0,
-        ancho, 0.12, fondo,
-        mat.acero
-    );
+        caja(g, 'Zocalo_inferior',
+            0, 0.08, 0,
+            ancho + 0.05, 0.16, fondo + 0.05,
+            mat.estructura
+        );
 
-    // Techo de cristal
-    caja(g, 'Techo_cristal',
-        0, 1.86, 0,
-        ancho - 0.12, 0.045, fondo - 0.12,
-        mat.cristal
-    );
+        // Panel frontal
+        caja(g, 'Panel_frontal',
+            0, 0.30, fondo / 2 + 0.015,
+            ancho - 0.18, 0.32, 0.035,
+            mat.azulOscuro
+        );
 
-    // Tres niveles para pays y pasteles
-    const niveles = [0.82, 1.16, 1.50];
-
-    niveles.forEach((y, i) => {
-        caja(g, `Charola_pasteles_${i + 1}`,
-            0, y, 0.02,
-            ancho - 0.30, 0.045, fondo - 0.30,
+        // Cubierta inferior
+        caja(g, 'Piso_vitrina',
+            0, 0.65, 0,
+            ancho, 0.10, fondo,
             mat.acero
         );
 
-        caja(g, `Iluminacion_nivel_${i + 1}`,
-            0, y + 0.10, -0.48,
-            ancho - 0.45, 0.035, 0.045,
+        // Pared trasera transparente
+        caja(g, 'Cristal_trasero',
+            0, 1.25, -fondo / 2 + 0.035,
+            ancho, 1.15, 0.055,
+            cristalPasteles
+        );
+
+        // Laterales transparentes
+        for (const dx of [-ancho / 2 + 0.035, ancho / 2 - 0.035]) {
+            caja(g, 'Cristal_lateral',
+                dx, 1.25, 0,
+                0.055, 1.15, fondo,
+                cristalPasteles
+            );
+        }
+
+        // Marco superior
+        caja(g, 'Marco_superior',
+            0, 1.85, 0,
+            ancho, 0.12, fondo,
+            mat.acero
+        );
+
+        // Techo transparente
+        caja(g, 'Techo_cristal',
+            0, 1.79, 0,
+            ancho - 0.12, 0.045, fondo - 0.12,
+            cristalPasteles
+        );
+
+        // Tres charolas para productos
+        const niveles = [0.82, 1.16, 1.50];
+
+        niveles.forEach((y, i) => {
+            caja(g, `Charola_pasteles_${i + 1}`,
+                0, y, 0.02,
+                ancho - 0.30, 0.045, fondo - 0.30,
+                mat.acero
+            );
+
+            // Iluminación de cada nivel
+            caja(g, `Iluminacion_nivel_${i + 1}`,
+                0, y + 0.10, -0.48,
+                ancho - 0.45, 0.035, 0.045,
+                mat.luz
+            );
+        });
+
+        // Puertas frontales transparentes
+        for (const dx of [-0.70, 0, 0.70]) {
+            caja(g, 'Puerta_cristal',
+                dx, 1.25, fondo / 2 - 0.025,
+                0.67, 1.05, 0.035,
+                cristalPasteles
+            );
+
+            caja(g, 'Tirador_puerta',
+                dx + 0.25, 1.25, fondo / 2 + 0.025,
+                0.035, 0.24, 0.035,
+                mat.acero
+            );
+        }
+
+        // Marco frontal superior
+        caja(g, 'Marco_frontal',
+            0, 1.82, fondo / 2,
+            ancho, 0.09, 0.09,
+            mat.acero
+        );
+
+        // Identificación de la vitrina
+        caja(g, 'Letrero_pasteles',
+            0, 1.98, -0.48,
+            2.30, 0.16, 0.10,
+            mat.naranja
+        );
+
+        // Luz interior
+        caja(g, 'Luz_interior_pasteles',
+            0, 1.68, -0.48,
+            2.20, 0.045, 0.06,
             mat.luz
         );
-    });
 
-    // Puertas frontales de cristal
-    for (const dx of [-0.70, 0, 0.70]) {
-        caja(g, 'Puerta_cristal',
-            dx, 1.25, fondo / 2 - 0.025,
-            0.67, 1.05, 0.035,
-            mat.cristal
+        // Datos para colocar pays y pasteles
+        g.userData.nivelesProducto = niveles;
+        g.userData.superficieProductoY = niveles;
+        g.userData.ancho = ancho - 0.30;
+        g.userData.fondo = fondo - 0.30;
+        g.userData.tipoEstanteria = 'pasteles';
+        g.userData.frenteZ = fondo / 2;
+
+        registrarColision(
+            nombre, x, z,
+            ancho + 0.15,
+            fondo + 0.15,
+            { tipo: 'vitrina_pasteles' }
         );
 
-        caja(g, 'Tirador_puerta',
-            dx + 0.25, 1.25, fondo / 2 + 0.025,
-            0.035, 0.24, 0.035,
-            mat.acero
-        );
+        return g;
     }
 
-    // Marco frontal superior
-    caja(g, 'Marco_frontal',
-        0, 1.82, fondo / 2,
-        ancho, 0.09, 0.09,
-        mat.acero
-    );
-
-    // Franja de identificación
-    caja(g, 'Letrero_pasteles',
-        0, 1.98, -0.48,
-        2.30, 0.16, 0.10,
-        mat.naranja
-    );
-
-    // Información para colocar productos
-    g.userData.nivelesProducto = niveles;
-    g.userData.superficieProductoY = niveles;
-    g.userData.ancho = ancho - 0.30;
-    g.userData.fondo = fondo - 0.30;
-    g.userData.tipoEstanteria = 'pasteles';
-    g.userData.frenteZ = fondo / 2;
-
-    registrarColision(
-        nombre,
-        x,
-        z,
-        ancho + 0.15,
-        fondo + 0.15,
-        { tipo: 'vitrina_pasteles' }
-    );
-
-    return g;
-}
+    // ============================================================
+    // CREACIÓN DE LOS DOS MUEBLES
+    // ============================================================
 
     {
         const dep = departamento('05_PANADERIA');
 
+        // Exhibidor de pan
         crearMueblePanaderia(
             dep,
             'Exhibidor_panaderia_01',
             25.2,
             -15.5
+        );
+
+        // Vitrina exclusiva para pays y pasteles
+        crearVitrinaPasteles(
+            dep,
+            'Vitrina_pays_pasteles_01',
+            25.2,
+            -20.0
         );
     }
 
