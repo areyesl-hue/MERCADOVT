@@ -199,7 +199,10 @@ registrarColision(
         let numero = 1;
 
         const posiciones = [
-
+            [-17, -13], [-17, 0], [-17, 13],
+            [-9, -13], [-9, 0], [-9, 13],
+            [9, -13], [9, 0], [9, 13],
+            [17, -13], [17, 0]
         ];
 
         posiciones.forEach(([x, z]) => {
