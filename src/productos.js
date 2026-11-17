@@ -1,3 +1,4 @@
+
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -99,9 +100,11 @@ export function crearProductosLacteos(scene) {
 
     function contieneMallas(objeto) {
         let encontrado = false;
+
         objeto.traverse((hijo) => {
             if (hijo.isMesh) encontrado = true;
         });
+
         return encontrado;
     }
 
@@ -121,10 +124,12 @@ export function crearProductosLacteos(scene) {
 
             for (const hijo of padre.children) {
                 const resultado = buscarContenedor(hijo);
+
                 if (resultado && resultado.length >= 2) {
                     return resultado;
                 }
             }
+
             return null;
         }
 
@@ -135,6 +140,7 @@ export function crearProductosLacteos(scene) {
                 `No se detectaron grupos independientes en "${original.name}". ` +
                 'Se utilizará el modelo completo como una unidad.'
             );
+
             return [original];
         }
 
@@ -212,6 +218,7 @@ export function crearProductosLacteos(scene) {
                     objetos: [],
                     matrices: []
                 };
+
                 grupos.set(clave, grupo);
             }
 
@@ -241,6 +248,7 @@ export function crearProductosLacteos(scene) {
                 console.warn(
                     `No se pudieron compactar mallas de ${fuente.name}; se conservarán separadas.`
                 );
+
                 continue;
             }
 
@@ -373,11 +381,13 @@ export function crearProductosLacteos(scene) {
 
     function obtenerDimensionesFuente(fuente) {
         let dimensiones = cacheDimensiones.get(fuente);
+
         if (dimensiones) return dimensiones;
 
         fuente.updateMatrixWorld(true);
 
         const caja = new THREE.Box3().setFromObject(fuente);
+
         if (caja.isEmpty()) return null;
 
         const centro = new THREE.Vector3();
@@ -391,9 +401,11 @@ export function crearProductosLacteos(scene) {
 
         return dimensiones;
     }
-        // ========================================================
+
+    // ========================================================
     // CREAR UNIDAD DE PRODUCTO
     // ========================================================
+
     function crearCopia(
         fuente,
         nombre,
@@ -406,23 +418,32 @@ export function crearProductosLacteos(scene) {
         limites = {}
     ) {
         if (!fuente) return null;
+
         const datosFuente = obtenerDimensionesFuente(fuente);
+
         if (!datosFuente) {
             console.warn(`Modelo sin geometría: ${nombre}`);
             return null;
         }
+
         const modelo = fuente.clone(true);
+
         modelo.name = nombre;
         modelo.position.set(0, 0, 0);
         modelo.scale.setScalar(1);
         modelo.rotation.set(0, rotacionY, 0);
         modelo.updateMatrixWorld(true);
+
         const cajaRotada = new THREE.Box3().setFromObject(modelo);
+
         if (cajaRotada.isEmpty()) return null;
+
         const dimensionesRotadas = new THREE.Vector3();
         const centroRotado = new THREE.Vector3();
+
         cajaRotada.getSize(dimensionesRotadas);
         cajaRotada.getCenter(centroRotado);
+
         if (
             dimensionesRotadas.x <= 0.0001 ||
             dimensionesRotadas.y <= 0.0001 ||
@@ -434,11 +455,11 @@ export function crearProductosLacteos(scene) {
             return null;
         }
 
-        const esBlusaOSudadera =
-            nombre.toLowerCase().includes('blusa') ||
-            nombre.toLowerCase().includes('sudadera negra');
-
         const nombreNormalizado = nombre.toLowerCase();
+
+        const esBlusaOSudadera =
+            nombreNormalizado.includes('blusa') ||
+            nombreNormalizado.includes('sudadera negra');
 
         const esCarne =
             nombreNormalizado.includes('pollo') ||
@@ -467,6 +488,7 @@ export function crearProductosLacteos(scene) {
         modelo.updateMatrixWorld(true);
 
         const cajaFinal = new THREE.Box3().setFromObject(modelo);
+
         if (cajaFinal.isEmpty()) return null;
 
         const centroFinal = new THREE.Vector3();
@@ -645,7 +667,6 @@ export function crearProductosLacteos(scene) {
         2.30
     ];
 
-    // Cada departamento tiene sus propias góndolas.
     const gondolasPorDepartamento = {
         'Abarrotes': [0, 1],
         'Enlatados': [2],
@@ -685,7 +706,7 @@ export function crearProductosLacteos(scene) {
                 }))
             )
         };
-            }
+    }
 
     // ========================================================
     // MESAS DE FRUTAS Y VERDURAS
@@ -744,7 +765,19 @@ export function crearProductosLacteos(scene) {
     // REFRIGERADORES
     // ========================================================
 
-    // Ocho refrigeradores físicos, de izquierda a derecha.
+    // IMPORTANTE:
+    // El índice 6 corresponde al refrigerador de cervezas.
+    // Su posición física debe existir también en mobiliario.js.
+    //
+    // 0 = Leches
+    // 1 = Leche pura
+    // 2 = Pepsi y Coca-Cola
+    // 3 = Fanta
+    // 4 = Refrigerador disponible
+    // 5 = Monster
+    // 6 = Cervezas
+    // 7 = Agua y jugos
+
     const refrigeradoresX = [
         -27,
         -23.5,
@@ -775,10 +808,13 @@ export function crearProductosLacteos(scene) {
         nivel,
         columna = null
     ) {
-        const indiceSeguro = Math.max(0, Math.min(
-            Number(indiceRefrigerador) || 0,
-            refrigeradoresX.length - 1
-        ));
+        const indiceSeguro = Math.max(
+            0,
+            Math.min(
+                Number(indiceRefrigerador) || 0,
+                refrigeradoresX.length - 1
+            )
+        );
 
         const x = refrigeradoresX[indiceSeguro];
 
@@ -793,26 +829,26 @@ export function crearProductosLacteos(scene) {
             'Leches_y_lacteos',
             'Refrescos_y_bebidas',
             'Refrescos_y_bebidas',
-            'Refrescos_y_bebidas',
+            'Refrigerador_disponible',
             'Monster',
             'Cervezas',
             'Jugos_y_agua'
         ];
 
+        const nivelSeguro = Math.max(
+            0,
+            Math.min(
+                Number(nivel) || 0,
+                nivelesRefrigerador.length - 1
+            )
+        );
+
         return {
-            idRack: `Refrigerador_${String(indiceSeguro + 1).padStart(2, '0')}_${nombresRefrigerador[indiceSeguro] ?? 'Bebidas'}`,
+            idRack: `Refrigerador_${String(indiceSeguro + 1).padStart(2, '0')}_${nombresRefrigerador[indiceSeguro]}`,
 
             posiciones: offsets.map((offsetX) => ({
                 x: x + offsetX,
-                y: nivelesRefrigerador[
-                    Math.max(
-                        0,
-                        Math.min(
-                            Number(nivel) || 0,
-                            nivelesRefrigerador.length - 1
-                        )
-                    )
-                ],
+                y: nivelesRefrigerador[nivelSeguro],
                 z: -26.5 + 0.30
             }))
         };
@@ -821,6 +857,9 @@ export function crearProductosLacteos(scene) {
     // ========================================================
     // MÓDULOS DE LIMPIEZA E HIGIENE
     // ========================================================
+
+    // Las alturas corresponden a los niveles de los racks.
+    // Se conserva la ubicación de los módulos del archivo original.
 
     const nivelesHigiene = [
         0.4575,
@@ -844,13 +883,18 @@ export function crearProductosLacteos(scene) {
 
         usoModulosHigiene.set(categoria, indice + 1);
 
-        const nivel = Math.floor(indice / 2);
+        const nivel = Math.min(
+            Math.floor(indice / 2),
+            nivelesHigiene.length - 1
+        );
+
         const mitad = indice % 2;
 
         const offsets = mitad === 0
             ? offsetsXHigiene.slice(0, 2)
             : offsetsXHigiene.slice(2, 4);
 
+        // Cada departamento tiene su propio módulo.
         const modulo = categoria === 'Limpieza'
             ? {
                 x: 28.3,
@@ -908,19 +952,29 @@ export function crearProductosLacteos(scene) {
         { archivo: '/modelos/PastaDental.glb', nombre: 'Pasta dental', categoria: 'Higiene personal', tipo: 'gondola', alto: 0.30, ancho: 0.26, profundidad: 0.12 },
         { archivo: '/modelos/desodorante.glb', nombre: 'Desodorante', categoria: 'Higiene personal', tipo: 'gondola', alto: 0.30, ancho: 0.15, profundidad: 0.15 },
         { archivo: '/modelos/shampooGold.glb', nombre: 'Shampoo Gold', categoria: 'Higiene personal', tipo: 'gondola', alto: 0.34, ancho: 0.20, profundidad: 0.14 },
+
+        // AGUA
         { archivo: '/modelos/Agua.glb', nombre: 'Agua', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 7, nivel: 0, alto: 0.43, ancho: 0.25, profundidad: 0.25 },
+
+        // LÁCTEOS
         { archivo: '/modelos/Lala.glb', nombre: 'Lala', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 0, nivel: 0, alto: 0.38, ancho: 0.30, profundidad: 0.26 },
         { archivo: '/modelos/Pepsi. y coca.glb', nombre: 'Pepsi y Coca', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 2, nivel: 1, alto: 0.42, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/Pepsi.glb', nombre: 'Pepsi', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 2, nivel: 2, alto: 0.42, ancho: 0.24, profundidad: 0.24 },
         { archivo: '/modelos/SantaClara.glb', nombre: 'Santa Clara', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 0, nivel: 1, alto: 0.38, ancho: 0.30, profundidad: 0.26 },
         { archivo: '/modelos/cocacola.glb', nombre: 'Coca-Cola', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 2, nivel: 3, alto: 0.42, ancho: 0.24, profundidad: 0.24 },
         { archivo: '/modelos/nesquik.glb', nombre: 'Nesquik', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 0, nivel: 2, alto: 0.38, ancho: 0.30, profundidad: 0.26 },
+
+        // FANTA
         { archivo: '/modelos/Fanta.glb', nombre: 'Fanta', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 3, nivel: 0, alto: 0.42, ancho: 0.24, profundidad: 0.24 },
         { archivo: '/modelos/FantaFresa.glb', nombre: 'Fanta Fresa', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 3, nivel: 1, alto: 0.42, ancho: 0.24, profundidad: 0.24 },
         { archivo: '/modelos/FantaUva.glb', nombre: 'Fanta Uva', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 3, nivel: 2, alto: 0.42, ancho: 0.24, profundidad: 0.24 },
+
+        // MONSTER
         { archivo: '/modelos/Monster.glb', nombre: 'Monster', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 5, nivel: 0, alto: 0.38, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/MonsterBlanca.glb', nombre: 'Monster Blanca', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 5, nivel: 1, alto: 0.38, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/MonsterRosa.glb', nombre: 'Monster Rosa', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 5, nivel: 2, alto: 0.38, ancho: 0.22, profundidad: 0.22 },
+
+        // FRUTAS Y VERDURAS
         { archivo: '/modelos/Brocoli.glb', nombre: 'Brocoli', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 0, alto: 0.28, ancho: 0.30, profundidad: 0.28 },
         { archivo: '/modelos/Elote.glb', nombre: 'Elote', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 0, alto: 0.30, ancho: 0.24, profundidad: 0.24 },
         { archivo: '/modelos/Limon.glb', nombre: 'Limon', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 0, alto: 0.20, ancho: 0.20, profundidad: 0.20 },
@@ -933,25 +987,42 @@ export function crearProductosLacteos(scene) {
         { archivo: '/modelos/LechePura.glb', nombre: 'Leche Pura', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 1, nivel: 0, alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/Naranja.glb', nombre: 'Naranja', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.28, ancho: 0.28, profundidad: 0.28 },
         { archivo: '/modelos/PIÑA.glb', nombre: 'Piña', categoria: 'Frutas y verduras', tipo: 'gondola', alto: 0.42, ancho: 0.38, profundidad: 0.38 },
+
+        // CARNICERÍA
         { archivo: '/modelos/costilla.glb', nombre: 'Costilla', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.30, ancho: 0.38, profundidad: 0.32 },
         { archivo: '/modelos/salchichas.glb', nombre: 'Salchichas', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.28, ancho: 0.38, profundidad: 0.30 },
+
+        // JUGOS
         { archivo: '/modelos/Limonada.glb', nombre: 'Limonada', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 7, nivel: 1, alto: 0.40, ancho: 0.24, profundidad: 0.24 },
         { archivo: '/modelos/Naranjada.glb', nombre: 'Naranjada', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 7, nivel: 2, alto: 0.40, ancho: 0.24, profundidad: 0.24 },
+
+        // ====================================================
+        // REFRIGERADOR EXCLUSIVO DE CERVEZAS: X = 23.5
+        // ====================================================
+
         { archivo: '/modelos/Cerveza Lager.glb', nombre: 'Cerveza Lager', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 6, nivel: 0, columna: 0, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/Cerveza XX.glb', nombre: 'Cerveza XX', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 6, nivel: 0, columna: 1, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/Cerveza Corona.glb', nombre: 'Cerveza Corona', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 6, nivel: 1, columna: 0, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/Cerveza Barrilitio.glb', nombre: 'Cerveza Barrilitio', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 6, nivel: 1, columna: 1, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/Carta Blanca.glb', nombre: 'Carta Blanca', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 6, nivel: 2, columna: 0, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/Tecate.glb', nombre: 'Tecate', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 6, nivel: 2, columna: 1, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
+
+        // LIMPIEZA
         { archivo: '/modelos/cloro_liquido.glb', nombre: 'Cloro liquido', categoria: 'Limpieza', tipo: 'higiene', alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/detergente_liquido.glb', nombre: 'Detergente liquido', categoria: 'Limpieza', tipo: 'higiene', alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/detergente_liquido1.glb', nombre: 'Detergente liquido 2', categoria: 'Limpieza', tipo: 'higiene', alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/limpiador_multiusos.glb', nombre: 'Limpiador multiusos', categoria: 'Limpieza', tipo: 'higiene', alto: 0.36, ancho: 0.28, profundidad: 0.25 },
-        { archivo: '/modelos/papel.glb', nombre: 'Papel', categoria: 'Higiene', tipo: 'higiene', alto: 0.34, ancho: 0.30, profundidad: 0.28 },
         { archivo: '/modelos/suavizante_liquido.glb', nombre: 'Suavizante', categoria: 'Limpieza', tipo: 'higiene', alto: 0.38, ancho: 0.28, profundidad: 0.25 },
+
+        // HIGIENE: PAPEL Y TOALLITAS EN SU PROPIO RACK
+        { archivo: '/modelos/papel.glb', nombre: 'Papel', categoria: 'Higiene', tipo: 'higiene', alto: 0.34, ancho: 0.30, profundidad: 0.28 },
         { archivo: '/modelos/toallitas_bebe.glb', nombre: 'Toallitas para bebe', categoria: 'Higiene', tipo: 'higiene', alto: 0.28, ancho: 0.30, profundidad: 0.24 },
+
+        // CARNICERÍA
         { archivo: '/modelos/Filete.glb', nombre: 'Filete', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.24, ancho: 0.32, profundidad: 0.28 },
         { archivo: '/modelos/Pollo.glb', nombre: 'Pollo', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.28, ancho: 0.34, profundidad: 0.30 },
+
+        // ROPA
         { archivo: '/modelos/Blusa.glb', nombre: 'Blusa', categoria: 'Ropa', tipo: 'ropa', alto: 0.72, ancho: 0.42, profundidad: 0.24 },
         { archivo: '/modelos/SudaderaNegra.glb', nombre: 'Sudadera negra', categoria: 'Ropa', tipo: 'ropa', alto: 0.72, ancho: 0.42, profundidad: 0.24 },
         { archivo: '/modelos/camisaAzul.glb', nombre: 'Camisa azul', categoria: 'Ropa', tipo: 'ropa', alto: 0.72, ancho: 0.42, profundidad: 0.24 },
@@ -960,7 +1031,8 @@ export function crearProductosLacteos(scene) {
         { archivo: '/modelos/sudaderaroja.glb', nombre: 'Sudadera roja', categoria: 'Ropa', tipo: 'ropa', alto: 0.72, ancho: 0.42, profundidad: 0.24 },
         { archivo: '/modelos/vesitdo.glb', nombre: 'Vestido', categoria: 'Ropa', tipo: 'ropa', alto: 0.72, ancho: 0.42, profundidad: 0.24 }
     ];
-        // ========================================================
+
+    // ========================================================
     // UBICACIÓN DE PRODUCTOS
     // ========================================================
 
