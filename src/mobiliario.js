@@ -386,6 +386,136 @@ registrarColision(
         return g;
     }
 
+function crearVitrinaPasteles(padre, nombre, x, z) {
+    const g = grupo(nombre, padre, x, z);
+
+    const ancho = 2.8;
+    const alto = 1.85;
+    const fondo = 1.35;
+
+    // Base refrigerada
+    caja(g, 'Base_refrigerada',
+        0, 0.30, 0,
+        ancho, 0.60, fondo,
+        mat.blanco
+    );
+
+    caja(g, 'Zocalo_inferior',
+        0, 0.08, 0,
+        ancho + 0.05, 0.16, fondo + 0.05,
+        mat.estructura
+    );
+
+    // Panel frontal decorativo
+    caja(g, 'Panel_frontal',
+        0, 0.30, fondo / 2 + 0.015,
+        ancho - 0.18, 0.32, 0.035,
+        mat.azulOscuro
+    );
+
+    // Cubierta inferior
+    caja(g, 'Piso_vitrina',
+        0, 0.65, 0,
+        ancho, 0.10, fondo,
+        mat.acero
+    );
+
+    // Pared trasera
+    caja(g, 'Cristal_trasero',
+        0, 1.25, -fondo / 2 + 0.035,
+        ancho, 1.15, 0.055,
+        mat.cristal
+    );
+
+    // Laterales transparentes
+    for (const dx of [-ancho / 2 + 0.035, ancho / 2 - 0.035]) {
+        caja(g, 'Cristal_lateral',
+            dx, 1.25, 0,
+            0.055, 1.15, fondo,
+            mat.cristal
+        );
+    }
+
+    // Marco superior
+    caja(g, 'Marco_superior',
+        0, alto, 0,
+        ancho, 0.12, fondo,
+        mat.acero
+    );
+
+    // Techo de cristal
+    caja(g, 'Techo_cristal',
+        0, 1.86, 0,
+        ancho - 0.12, 0.045, fondo - 0.12,
+        mat.cristal
+    );
+
+    // Tres niveles para pays y pasteles
+    const niveles = [0.82, 1.16, 1.50];
+
+    niveles.forEach((y, i) => {
+        caja(g, `Charola_pasteles_${i + 1}`,
+            0, y, 0.02,
+            ancho - 0.30, 0.045, fondo - 0.30,
+            mat.acero
+        );
+
+        caja(g, `Iluminacion_nivel_${i + 1}`,
+            0, y + 0.10, -0.48,
+            ancho - 0.45, 0.035, 0.045,
+            mat.luz
+        );
+    });
+
+    // Puertas frontales de cristal
+    for (const dx of [-0.70, 0, 0.70]) {
+        caja(g, 'Puerta_cristal',
+            dx, 1.25, fondo / 2 - 0.025,
+            0.67, 1.05, 0.035,
+            mat.cristal
+        );
+
+        caja(g, 'Tirador_puerta',
+            dx + 0.25, 1.25, fondo / 2 + 0.025,
+            0.035, 0.24, 0.035,
+            mat.acero
+        );
+    }
+
+    // Marco frontal superior
+    caja(g, 'Marco_frontal',
+        0, 1.82, fondo / 2,
+        ancho, 0.09, 0.09,
+        mat.acero
+    );
+
+    // Franja de identificación
+    caja(g, 'Letrero_pasteles',
+        0, 1.98, -0.48,
+        2.30, 0.16, 0.10,
+        mat.naranja
+    );
+
+    // Información para colocar productos
+    g.userData.nivelesProducto = niveles;
+    g.userData.superficieProductoY = niveles;
+    g.userData.ancho = ancho - 0.30;
+    g.userData.fondo = fondo - 0.30;
+    g.userData.tipoEstanteria = 'pasteles';
+    g.userData.frenteZ = fondo / 2;
+
+    registrarColision(
+        nombre,
+        x,
+        z,
+        ancho + 0.15,
+        fondo + 0.15,
+        { tipo: 'vitrina_pasteles' }
+    );
+
+    return g;
+}
+
     {
         const dep = departamento('05_PANADERIA');
 
