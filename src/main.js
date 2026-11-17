@@ -1,3 +1,4 @@
+
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
@@ -23,7 +24,6 @@ const CONFIG = {
     gravedad: 19,
 
     colorCieloDia: 0xa9c9e8,
-    colorCieloNoche: 0x101827,
 
     pixelRatioMaximo: 0.75,
     antialias: false,
@@ -205,15 +205,10 @@ let indiceSiguienteLadron = 0;
 // ============================================================
 // 30 CÁMARAS DE SEGURIDAD
 // ============================================================
-// Las cámaras de productos utilizan FOV reducido para acercar
-// la imagen. Las posiciones apuntan hacia los estantes.
-// ============================================================
 
 const CONFIG_CAMARAS = [
 
-    // --------------------------------------------------------
     // GÓNDOLAS IZQUIERDAS
-    // --------------------------------------------------------
 
     {
         nombre: 'Cámara 1 - Góndola izquierda frontal',
@@ -240,9 +235,7 @@ const CONFIG_CAMARAS = [
         fov: 43
     },
 
-    // --------------------------------------------------------
     // GÓNDOLAS CENTRALES
-    // --------------------------------------------------------
 
     {
         nombre: 'Cámara 5 - Góndola central izquierda frontal',
@@ -269,9 +262,7 @@ const CONFIG_CAMARAS = [
         fov: 43
     },
 
-    // --------------------------------------------------------
     // GÓNDOLAS DERECHAS
-    // --------------------------------------------------------
 
     {
         nombre: 'Cámara 9 - Góndola derecha frontal',
@@ -298,9 +289,7 @@ const CONFIG_CAMARAS = [
         fov: 43
     },
 
-    // --------------------------------------------------------
     // REFRIGERADORES
-    // --------------------------------------------------------
 
     {
         nombre: 'Cámara 13 - Refrigeradores extremos izquierdos',
@@ -327,9 +316,7 @@ const CONFIG_CAMARAS = [
         fov: 42
     },
 
-    // --------------------------------------------------------
     // FRUTAS Y VERDURAS
-    // --------------------------------------------------------
 
     {
         nombre: 'Cámara 17 - Frutas mesa exterior izquierda',
@@ -356,9 +343,7 @@ const CONFIG_CAMARAS = [
         fov: 40
     },
 
-    // --------------------------------------------------------
     // PANADERÍA Y VITRINAS
-    // --------------------------------------------------------
 
     {
         nombre: 'Cámara 21 - Vitrinas derecha superior',
@@ -373,9 +358,7 @@ const CONFIG_CAMARAS = [
         fov: 42
     },
 
-    // --------------------------------------------------------
     // CAJAS Y ENTRADA
-    // --------------------------------------------------------
 
     {
         nombre: 'Cámara 23 - Cajas registradoras izquierdas',
@@ -402,9 +385,7 @@ const CONFIG_CAMARAS = [
         fov: 55
     },
 
-    // --------------------------------------------------------
     // ESTACIONAMIENTO
-    // --------------------------------------------------------
 
     {
         nombre: 'Cámara 27 - Entrada de vehículos',
@@ -448,9 +429,7 @@ let mobiliarioSupermercado = null;
 
 let luzAmbiente;
 let luzSol;
-let luzLuna;
 
-let modoNoche = false;
 let juegoIniciado = false;
 let velocidadVertical = 0;
 let jugadorEnSuelo = true;
@@ -461,7 +440,6 @@ let quaternionJugadorGuardado = null;
 let fovJugadorGuardado = null;
 
 let siguienteModeloCliente = 0;
-let ultimaPosicionRegistrada = null;
 let temporizadorMensaje = null;
 
 const teclas = Object.create(null);
@@ -512,7 +490,6 @@ function iniciar() {
     crearSistemaVehiculos();
 
     configurarEventos();
-    actualizarIluminacion();
     actualizarHUD();
 
     iniciarAnimacion();
@@ -571,7 +548,7 @@ function crearRenderizador() {
 }
 
 // ============================================================
-// ILUMINACIÓN
+// ILUMINACIÓN PERMANENTE DE DÍA
 // ============================================================
 
 function crearIluminacion() {
@@ -586,34 +563,8 @@ function crearIluminacion() {
     luzSol = new THREE.DirectionalLight(0xffedcf, 1.15);
     luzSol.position.set(-35, 55, 35);
     luzSol.castShadow = false;
+
     escena.add(luzSol);
-
-    luzLuna = new THREE.DirectionalLight(0x829bc9, 0.35);
-    luzLuna.position.set(20, 35, -25);
-    luzLuna.castShadow = false;
-    luzLuna.visible = false;
-    escena.add(luzLuna);
-}
-
-function actualizarIluminacion() {
-    if (modoNoche) {
-        escena.background.setHex(CONFIG.colorCieloNoche);
-        escena.fog.color.setHex(CONFIG.colorCieloNoche);
-
-        luzAmbiente.intensity = 0.85;
-        luzSol.intensity = 0.08;
-
-        luzLuna.visible = true;
-        luzLuna.intensity = 0.45;
-    } else {
-        escena.background.setHex(CONFIG.colorCieloDia);
-        escena.fog.color.setHex(0xc7d9e9);
-
-        luzAmbiente.intensity = 1.45;
-        luzSol.intensity = 1.15;
-
-        luzLuna.visible = false;
-    }
 }
 
 // ============================================================
@@ -737,6 +688,7 @@ function generarSiguienteLadron() {
             Math.random() *
             (MAXIMO_INTERVALO_LADRONES -
                 MINIMO_INTERVALO_LADRONES);
+
         return;
     }
 
@@ -761,6 +713,7 @@ function generarSiguienteLadron() {
 
                 alRobar: datos => {
                     console.info(`[LADRÓN] ${datos.id} robó un producto.`, datos);
+
                     mostrarMensaje(
                         `¡Robo detectado! ${datos.id} tomó ${datos.producto.nombre}.`
                     );
@@ -792,6 +745,7 @@ function generarSiguienteLadron() {
 
 function actualizarGeneradorLadrones(delta) {
     if (!productosLacteos) return;
+
     if (
         ladronesSupermercado.filter(
             ladron => ladron && !ladron.eliminado
@@ -804,6 +758,7 @@ function actualizarGeneradorLadrones(delta) {
 
     if (temporizadorLadrones <= 0) {
         generarSiguienteLadron();
+
         temporizadorLadrones =
             MINIMO_INTERVALO_LADRONES +
             Math.random() *
@@ -904,7 +859,7 @@ function crearClienteParaVehiculo(datos) {
             modelo: config.modelo,
             posicion: posicionInicio,
             mobiliario: mobiliarioSupermercado,
-colisiones: mobiliarioSupermercado?.userData?.obtenerColisiones?.() ?? [],
+            colisiones: mobiliarioSupermercado?.userData?.obtenerColisiones?.() ?? [],
             velocidad: CONFIG.velocidadCliente,
             escala: 1,
             ruta: config.ruta,
@@ -922,6 +877,7 @@ colisiones: mobiliarioSupermercado?.userData?.obtenerColisiones?.() ?? [],
                 if (!visita) return;
 
                 visita.tiempo = 0;
+
                 console.info(
                     `[VISITANTE] ${visita.nombreCliente} lleva ${totalProductos} producto(s); se reinicia su tiempo de compra.`
                 );
@@ -1008,8 +964,10 @@ colisiones: mobiliarioSupermercado?.userData?.obtenerColisiones?.() ?? [],
         console.info(`[VISITANTE] ${idVehiculo} comenzó a caminar.`);
     } catch (error) {
         console.error('Error al crear visitante:', error);
+
         cliente?.eliminar?.();
         limpiarVisitaVehiculo(idVehiculo);
+
         sistemaVehiculos?.solicitarSalida?.(idVehiculo);
     }
 }
@@ -1056,6 +1014,7 @@ function crearCarritoVisitante(cliente, idVisita) {
         carritosClientes.push(carrito);
 
         console.info(`[CARRITO] Creado para ${idVisita}.`);
+
         return carrito;
     } catch (error) {
         console.error(`[CARRITO] Error creando ${idVisita}:`, error);
@@ -1086,11 +1045,13 @@ function retirarClienteYCarritoDeVisita(visita) {
     }
 
     const indiceCliente = clientesSupermercado.indexOf(cliente);
+
     if (indiceCliente !== -1) {
         clientesSupermercado.splice(indiceCliente, 1);
     }
 
     const indiceCarrito = carritosClientes.indexOf(carrito);
+
     if (indiceCarrito !== -1) {
         carritosClientes.splice(indiceCarrito, 1);
     }
@@ -1107,6 +1068,7 @@ function retirarClienteYCarritoDeVisita(visita) {
 
 function limpiarVisitaVehiculo(idVehiculo) {
     const visita = visitantesPorVehiculo.get(idVehiculo);
+
     if (!visita) return;
 
     liberarCajaVisitante(visita);
@@ -1119,11 +1081,13 @@ function limpiarVisitaVehiculo(idVehiculo) {
     }
 
     const indiceCliente = clientesSupermercado.indexOf(visita.cliente);
+
     if (indiceCliente !== -1) {
         clientesSupermercado.splice(indiceCliente, 1);
     }
 
     const indiceCarrito = carritosClientes.indexOf(visita.carrito);
+
     if (indiceCarrito !== -1) {
         carritosClientes.splice(indiceCarrito, 1);
     }
@@ -1148,6 +1112,7 @@ function reservarCaja(visita) {
     if (visita.cajaAsignada) return visita.cajaAsignada;
 
     const caja = obtenerCajaDisponible();
+
     if (!caja) return null;
 
     cajasOcupadas.set(caja.id, visita.idVehiculo);
@@ -1165,6 +1130,7 @@ function liberarCajaVisitante(visita) {
 
     if (cajasOcupadas.get(caja.id) === visita.idVehiculo) {
         cajasOcupadas.delete(caja.id);
+
         console.info(`[CAJA ${caja.id}] Liberada.`);
     }
 
@@ -1258,6 +1224,7 @@ function clienteEstaOcupadoComprando(estado) {
 function obtenerComprasCliente(cliente) {
     if (typeof cliente?.obtenerCompras === 'function') {
         const compras = cliente.obtenerCompras();
+
         return Array.isArray(compras) ? compras : [];
     }
 
@@ -1327,11 +1294,13 @@ function actualizarFasesVisitantes(delta) {
             mostrarMensaje(
                 `${visita.nombreCliente} no encontró productos y regresará a su vehículo.`
             );
+
             iniciarRegresoVisitante(visita);
             continue;
         }
 
         visita.pagoSolicitado = true;
+
         iniciarPagoVisitante(visita);
     }
 
@@ -1359,7 +1328,9 @@ function iniciarPagoVisitante(visita) {
     if (!cliente || typeof cliente.iniciarPago !== 'function') {
         visita.fase = 'errorPago';
         visita.pagoSolicitado = false;
+
         console.error('El cliente no tiene iniciarPago().');
+
         return;
     }
 
@@ -1395,14 +1366,18 @@ function iniciarPagoVisitante(visita) {
 
         if (iniciado === false) {
             liberarCajaVisitante(visita);
+
             visita.fase = 'errorPago';
             visita.pagoSolicitado = false;
+
             mostrarMensaje('No se pudo iniciar el recorrido a caja.');
         }
     } catch (error) {
         liberarCajaVisitante(visita);
+
         visita.fase = 'errorPago';
         visita.pagoSolicitado = false;
+
         console.error('Error al iniciar pago:', error);
     }
 }
@@ -1435,13 +1410,16 @@ function iniciarRegresoVisitante(visita) {
     if (!visita) return;
 
     liberarCajaVisitante(visita);
+
     visita.fase = 'regresando';
 
     const cliente = visita.cliente;
 
     if (!cliente || typeof cliente.iniciarRegresoVehiculo !== 'function') {
         console.error('El cliente no tiene iniciarRegresoVehiculo().');
+
         visita.fase = 'errorRegreso';
+
         return;
     }
 
@@ -1458,16 +1436,19 @@ function iniciarRegresoVisitante(visita) {
                 );
 
                 retirarClienteYCarritoDeVisita(visita);
+
                 solicitarSalidaVisitante(visita);
             }
         );
 
         if (iniciado === false) {
             visita.fase = 'errorRegreso';
+
             console.error('No se pudo iniciar el regreso al vehículo.');
         }
     } catch (error) {
         visita.fase = 'errorRegreso';
+
         console.error('Error en el regreso:', error);
     }
 }
@@ -1481,6 +1462,7 @@ function solicitarSalidaVisitante(visita) {
 
     if (typeof sistemaVehiculos?.solicitarSalida !== 'function') {
         console.error('El sistema de vehículos no tiene solicitarSalida().');
+
         return false;
     }
 
@@ -1500,6 +1482,7 @@ function solicitarSalidaVisitante(visita) {
     }
 
     visita.salidaSolicitada = false;
+
     return false;
 }
 
@@ -1562,10 +1545,12 @@ function actualizarJugador(delta) {
     }
 
     velocidadVertical -= CONFIG.gravedad * delta;
+
     camara.position.y += velocidadVertical * delta;
 
     if (camara.position.y <= CONFIG.alturaJugador) {
         camara.position.y = CONFIG.alturaJugador;
+
         velocidadVertical = 0;
         jugadorEnSuelo = true;
     }
@@ -1590,11 +1575,17 @@ function actualizarJugador(delta) {
 // ============================================================
 
 function registrarTrayectoria(posicion) {
-    if (ultimaPosicionRegistrada) {
-        const dx = posicion.x - ultimaPosicionRegistrada.x;
-        const dz = posicion.z - ultimaPosicionRegistrada.z;
+    const ultimaPosicion = trayectoriaJugador.length
+        ? trayectoriaJugador[trayectoriaJugador.length - 1]
+        : null;
 
-        if (Math.hypot(dx, dz) < CONFIG.distanciaRegistro) return;
+    if (ultimaPosicion) {
+        const dx = posicion.x - ultimaPosicion.x;
+        const dz = posicion.z - ultimaPosicion.z;
+
+        if (Math.hypot(dx, dz) < CONFIG.distanciaRegistro) {
+            return;
+        }
     }
 
     trayectoriaJugador.push({
@@ -1604,36 +1595,9 @@ function registrarTrayectoria(posicion) {
         z: Number(posicion.z.toFixed(3))
     });
 
-    ultimaPosicionRegistrada = {
-        x: posicion.x,
-        y: posicion.y,
-        z: posicion.z
-    };
-
     if (trayectoriaJugador.length > CONFIG.maximoRegistros) {
         trayectoriaJugador.shift();
     }
-}
-
-function exportarTrayectoria() {
-    if (!trayectoriaJugador.length) {
-        mostrarMensaje('Muévete primero para registrar el recorrido.');
-        return;
-    }
-
-    const filas = [
-        'fecha,x,y,z',
-        ...trayectoriaJugador.map(
-            p => `${p.fecha},${p.x},${p.y},${p.z}`
-        )
-    ];
-
-    descargarCSV(
-        filas.join('\n'),
-        'recorrido_supermercado.csv'
-    );
-
-    mostrarMensaje('Recorrido exportado.');
 }
 
 // ============================================================
@@ -1644,6 +1608,7 @@ function obtenerArticulosTicket(ticket) {
     if (Array.isArray(ticket?.articulos)) return ticket.articulos;
     if (Array.isArray(ticket?.productos)) return ticket.productos;
     if (Array.isArray(ticket?.items)) return ticket.items;
+
     return [];
 }
 
@@ -1674,6 +1639,7 @@ function obtenerSubtotalArticulo(articulo) {
 function exportarTickets() {
     if (!ticketsGenerados.length) {
         mostrarMensaje('Todavía no hay tickets generados.');
+
         return;
     }
 
@@ -1726,6 +1692,7 @@ function descargarCSV(contenido, nombreArchivo) {
     enlace.download = nombreArchivo;
 
     document.body.appendChild(enlace);
+
     enlace.click();
     enlace.remove();
 
@@ -1738,6 +1705,7 @@ function descargarCSV(contenido, nombreArchivo) {
 
 function mostrarTicket(ticket, nombreCliente = 'Cliente') {
     const ventana = document.getElementById('ticket-supermercado');
+
     if (!ventana || !ticket) return;
 
     const datos = document.getElementById('ticket-datos');
@@ -1761,6 +1729,7 @@ function mostrarTicket(ticket, nombreCliente = 'Cliente') {
         const fila = document.createElement('tr');
 
         const nombre = document.createElement('td');
+
         nombre.textContent =
             articulo.nombre ??
             articulo.nombreProducto ??
@@ -1768,15 +1737,19 @@ function mostrarTicket(ticket, nombreCliente = 'Cliente') {
             'Producto';
 
         const cantidad = document.createElement('td');
+
         cantidad.textContent = String(articulo.cantidad ?? 1);
 
         const importe = document.createElement('td');
+
         const subtotal = obtenerSubtotalArticulo(articulo);
 
         totalCalculado += subtotal;
+
         importe.textContent = `$${subtotal.toFixed(2)}`;
 
         fila.append(nombre, cantidad, importe);
+
         articulos.append(fila);
     }
 
@@ -1785,6 +1758,7 @@ function mostrarTicket(ticket, nombreCliente = 'Cliente') {
         : totalCalculado;
 
     totalElemento.textContent = `$${total.toFixed(2)}`;
+
     ventana.style.display = 'flex';
 }
 
@@ -1794,6 +1768,7 @@ function mostrarTicket(ticket, nombreCliente = 'Cliente') {
 
 function crearInterfazCamaras() {
     const panel = document.createElement('div');
+
     panel.id = 'panel-camaras';
 
     Object.assign(panel.style, {
@@ -1818,7 +1793,9 @@ function crearInterfazCamaras() {
     CONFIG_CAMARAS.forEach((config, indice) => {
         const boton = document.createElement('button');
 
-        boton.textContent = `CAM ${String(indice + 1).padStart(2, '0')}`;
+        boton.textContent =
+            `CAM ${String(indice + 1).padStart(2, '0')}`;
+
         boton.title = config.nombre;
         boton.className = 'boton-supermercado';
 
@@ -1830,11 +1807,14 @@ function crearInterfazCamaras() {
     });
 
     const botonJugador = document.createElement('button');
+
     botonJugador.textContent = 'JUGADOR';
     botonJugador.className = 'boton-supermercado';
+
     botonJugador.addEventListener('click', volverAlJugador);
 
     panel.appendChild(botonJugador);
+
     document.body.appendChild(panel);
 }
 
@@ -1849,7 +1829,6 @@ function cambiarVistaSeguridad(numero) {
 
     const config = CONFIG_CAMARAS[numero - 1];
 
-    // Guardar la posición, rotación y zoom original del jugador.
     if (vistaSeguridad === null) {
         posicionJugadorGuardada = camara.position.clone();
         quaternionJugadorGuardado = camara.quaternion.clone();
@@ -1857,6 +1836,7 @@ function cambiarVistaSeguridad(numero) {
     }
 
     limpiarTeclas();
+
     velocidadVertical = 0;
     vistaSeguridad = numero;
 
@@ -1874,11 +1854,11 @@ function cambiarVistaSeguridad(numero) {
         config.objetivo.z
     );
 
-    // Zoom de seguridad: FOV más pequeño = imagen más cercana.
     camara.fov = config.fov ?? 48;
     camara.updateProjectionMatrix();
 
     actualizarEstadoVista();
+
     mostrarMensaje(config.nombre);
 }
 
@@ -1898,23 +1878,27 @@ function volverAlJugador() {
         }
 
         vistaSeguridad = null;
+
         posicionJugadorGuardada = null;
         quaternionJugadorGuardado = null;
         fovJugadorGuardado = null;
     }
 
     limpiarTeclas();
+
     actualizarEstadoVista();
 }
 
 function actualizarEstadoVista() {
     const elemento = document.getElementById('estado-vista');
+
     if (!elemento) return;
 
     if (vistaSeguridad === null) {
         elemento.textContent = 'Vista: jugador';
     } else {
         const config = CONFIG_CAMARAS[vistaSeguridad - 1];
+
         elemento.textContent = `Vista: ${config.nombre}`;
     }
 }
@@ -2115,7 +2099,10 @@ function crearInterfaz() {
 
     document.head.appendChild(estilos);
 
+    // PORTADA
+
     const portada = document.createElement('div');
+
     portada.id = 'portada-supermercado';
 
     portada.innerHTML = `
@@ -2130,7 +2117,10 @@ function crearInterfaz() {
 
     document.body.appendChild(portada);
 
+    // HUD
+
     const hud = document.createElement('div');
+
     hud.id = 'hud-supermercado';
 
     hud.innerHTML = `
@@ -2139,39 +2129,61 @@ function crearInterfaz() {
         SHIFT: correr<br>
         ESPACIO: saltar<br>
         ESC: liberar mouse
-        <div id="estado-entidades">Clientes: 0 | Ladrones: 0</div>
-        <div id="estado-recorrido">Recorrido: 0 puntos</div>
-        <div id="estado-vista">Vista: jugador</div>
-        <div id="estado-compras">Tickets: 0</div>
+
+        <div id="estado-entidades">
+            Clientes: 0 | Ladrones: 0
+        </div>
+
+        <div id="estado-recorrido">
+            Recorrido: 0 puntos
+        </div>
+
+        <div id="estado-vista">
+            Vista: jugador
+        </div>
+
+        <div id="estado-compras">
+            Tickets: 0
+        </div>
     `;
 
     document.body.appendChild(hud);
 
+    // ACCIONES
+
     const acciones = document.createElement('div');
+
     acciones.id = 'acciones-supermercado';
 
     acciones.innerHTML = `
-        <button id="btn-dia-noche" class="boton-supermercado">DÍA / NOCHE</button>
-        <button id="btn-llegada" class="boton-supermercado">LLEGADA DE AUTO</button>
-        <button id="btn-entrada" class="boton-supermercado">VOLVER A ENTRADA</button>
-        <button id="btn-recorrido" class="boton-supermercado">EXPORTAR RECORRIDO</button>
-        <button id="btn-tickets" class="boton-supermercado">EXPORTAR TICKETS</button>
+        <button id="btn-tickets" class="boton-supermercado">
+            EXPORTAR TICKETS
+        </button>
     `;
 
     document.body.appendChild(acciones);
 
+    // MENSAJES
+
     const mensaje = document.createElement('div');
+
     mensaje.id = 'mensaje-supermercado';
     mensaje.textContent = 'Pulsa ENTRAR para comenzar.';
+
     document.body.appendChild(mensaje);
 
+    // VENTANA DE TICKETS
+
     const ticket = document.createElement('div');
+
     ticket.id = 'ticket-supermercado';
 
     ticket.innerHTML = `
         <div id="ticket-contenido">
             <h2>SUPERMERCADO 3D</h2>
+
             <p id="ticket-datos"></p>
+
             <table>
                 <thead>
                     <tr>
@@ -2180,15 +2192,23 @@ function crearInterfaz() {
                         <th>Importe</th>
                     </tr>
                 </thead>
+
                 <tbody id="ticket-articulos"></tbody>
             </table>
+
             <div class="ticket-total">
                 <span>TOTAL</span>
                 <span id="ticket-total">$0.00</span>
             </div>
+
             <div class="ticket-botones">
-                <button id="ticket-imprimir" class="boton-supermercado">IMPRIMIR</button>
-                <button id="ticket-cerrar" class="boton-supermercado">CERRAR</button>
+                <button id="ticket-imprimir" class="boton-supermercado">
+                    IMPRIMIR
+                </button>
+
+                <button id="ticket-cerrar" class="boton-supermercado">
+                    CERRAR
+                </button>
             </div>
         </div>
     `;
@@ -2197,71 +2217,28 @@ function crearInterfaz() {
 
     crearInterfazCamaras();
 
+    // EVENTO ENTRAR
+
     document.getElementById('btn-entrar').onclick = () => {
         juegoIniciado = true;
+
         portada.style.display = 'none';
+
         controles.lock();
     };
 
-    document.getElementById('btn-dia-noche').onclick = () => {
-        modoNoche = !modoNoche;
-        actualizarIluminacion();
-
-        mostrarMensaje(
-            modoNoche
-                ? 'Modo nocturno activado.'
-                : 'Modo diurno activado.'
-        );
-    };
-
-    document.getElementById('btn-llegada').onclick = () => {
-        if (typeof sistemaVehiculos?.solicitarLlegada !== 'function') {
-            mostrarMensaje('El sistema de vehículos no está disponible.');
-            return;
-        }
-
-        const resultado = sistemaVehiculos.solicitarLlegada();
-
-        if (resultado === false || resultado === 0) {
-            mostrarMensaje(
-                'No hay plazas disponibles o no se pudo solicitar el vehículo.'
-            );
-            return;
-        }
-
-        mostrarMensaje('Llegada de vehículo solicitada.');
-    };
-
-    document.getElementById('btn-entrada').onclick = () => {
-        volverAlJugador();
-
-        camara.position.set(
-            0,
-            CONFIG.alturaJugador,
-            25
-        );
-
-        camara.lookAt(
-            0,
-            CONFIG.alturaJugador,
-            15
-        );
-
-        velocidadVertical = 0;
-        jugadorEnSuelo = true;
-
-        registrarTrayectoria(camara.position);
-    };
-
-    document.getElementById('btn-recorrido').onclick =
-        exportarTrayectoria;
+    // EXPORTAR TICKETS
 
     document.getElementById('btn-tickets').onclick =
         exportarTickets;
 
+    // CERRAR TICKET
+
     document.getElementById('ticket-cerrar').onclick = () => {
         ticket.style.display = 'none';
     };
+
+    // IMPRIMIR TICKET
 
     document.getElementById('ticket-imprimir').onclick = () => {
         window.print();
@@ -2274,6 +2251,7 @@ function crearInterfaz() {
 
 function mostrarMensaje(texto) {
     const elemento = document.getElementById('mensaje-supermercado');
+
     if (!elemento) return;
 
     elemento.textContent = texto;
@@ -2331,6 +2309,8 @@ function configurarEventos() {
 
         teclas[evento.code] = true;
 
+        // SALTO
+
         if (
             evento.code === 'Space' &&
             juegoIniciado &&
@@ -2339,10 +2319,12 @@ function configurarEventos() {
             jugadorEnSuelo
         ) {
             velocidadVertical = CONFIG.velocidadSalto;
+
             jugadorEnSuelo = false;
         }
 
-        // Cámaras 1 a 9.
+        // CÁMARAS 1 A 9
+
         if (/^Digit[1-9]$/.test(evento.code)) {
             cambiarVistaSeguridad(Number(evento.code.slice(-1)));
         }
@@ -2351,11 +2333,15 @@ function configurarEventos() {
             cambiarVistaSeguridad(Number(evento.code.slice(-1)));
         }
 
-        // Cámaras 10 a 21 mediante F1 a F12.
+        // CÁMARAS 10 A 21 MEDIANTE F1 A F12
+
         if (/^F([1-9]|1[0-2])$/.test(evento.code)) {
             const numeroFuncion = Number(evento.code.slice(1));
+
             cambiarVistaSeguridad(9 + numeroFuncion);
         }
+
+        // VOLVER A LA VISTA DEL JUGADOR
 
         if (
             evento.code === 'Digit0' ||
@@ -2374,12 +2360,14 @@ function configurarEventos() {
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             limpiarTeclas();
+
             reloj.getDelta();
         }
     });
 
     window.addEventListener('resize', () => {
         camara.aspect = window.innerWidth / window.innerHeight;
+
         camara.updateProjectionMatrix();
 
         renderizador.setSize(
@@ -2415,6 +2403,7 @@ function iniciarAnimacion() {
 
         if (acumuladorHUD >= INTERVALO_HUD) {
             acumuladorHUD = 0;
+
             actualizarHUD();
         }
 
