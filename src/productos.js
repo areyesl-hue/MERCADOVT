@@ -861,81 +861,65 @@ export function crearProductosLacteos(scene) {
 
     const usoModulosHigiene = new Map();
 
-    function obtenerPosicionesHigiene(categoria, nombre = '') {
-        const nombreNormalizado = String(nombre)
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '');
 
-        let modulo;
+function obtenerPosicionesHigiene(categoria, nombre = '') {
+    const nombreNormalizado = String(nombre).toLowerCase();
 
-        // PAPEL HIGIÉNICO
-        if (
-            nombreNormalizado.includes('papel') ||
-            nombreNormalizado.includes('higienico')
-        ) {
-            modulo = {
-                x: 24.5,
-                z: 8.0,
-                id: 'Rack_papel_higienico'
-            };
-        }
+    // Papel higiénico y toallitas comparten el mismo rack.
+    const esPapel =
+        nombreNormalizado.includes('papel') ||
+        nombreNormalizado.includes('higienico');
 
-        // TOALLITAS HÚMEDAS
-        else if (
-            nombreNormalizado.includes('toallita') ||
-            nombreNormalizado.includes('bebe')
-        ) {
-            modulo = {
-                x: 28.3,
-                z: 12.5,
-                id: 'Rack_toallitas_humedas'
-            };
-        }
+    const esToallita =
+        nombreNormalizado.includes('toallita') ||
+        nombreNormalizado.includes('bebe');
 
-        // DETERGENTES Y PRODUCTOS DE LIMPIEZA
-        else {
-            modulo = {
-                x: 28.3,
-                z: 8.0,
-                id: 'Modulo_limpieza'
-            };
-        }
+    let modulo;
 
-        const clave = modulo.id;
-        const indice = usoModulosHigiene.get(clave) ?? 0;
+    if (esPapel || esToallita) {
+        modulo = {
+            x: 28.3,
+            z: 12.5,
+            id: 'Rack_toallitas_humedas'
+        };
+    } else {
+        modulo = {
+            x: 28.3,
+            z: 8.0,
+            id: 'Modulo_limpieza'
+        };
+    }
 
-        usoModulosHigiene.set(clave, indice + 1);
+    // Tres columnas y cinco niveles.
+    const niveles = [0.47, 0.82, 1.17, 1.52, 1.87];
+    const offsetsX = [-0.75, 0, 0.75];
 
-        const nivel = Math.floor(
-            indice / offsetsXHigiene.length
+    const indice = usoModulosHigiene.get(modulo.id) ?? 0;
+
+    usoModulosHigiene.set(modulo.id, indice + 1);
+
+    const nivel = Math.floor(indice / offsetsX.length);
+
+    if (nivel >= niveles.length) {
+        console.warn(
+            `No hay más espacios disponibles en ${modulo.id} para ${nombre}`
         );
-
-        if (nivel >= nivelesHigiene.length) {
-            console.warn(
-                `No hay más espacios disponibles en ${modulo.id} para ${nombre}.`
-            );
-
-            return {
-                idRack: modulo.id,
-                posiciones: []
-            };
-        }
-
-        const offsetX = offsetsXHigiene[
-            indice % offsetsXHigiene.length
-        ];
 
         return {
             idRack: modulo.id,
-
-            posiciones: [{
-                x: modulo.x + offsetX,
-                y: nivelesHigiene[nivel],
-                z: modulo.z + 0.475
-            }]
+            posiciones: []
         };
     }
+
+    return {
+        idRack: modulo.id,
+        posiciones: [{
+            x: modulo.x + offsetsX[indice % offsetsX.length],
+            y: niveles[nivel],
+            z: modulo.z + 0.475
+        }]
+    };
+}
 
     // ========================================================
     // CATÁLOGO DE PRODUCTOS
