@@ -853,71 +853,71 @@ export function crearProductosLacteos(scene) {
             }))
         };
     }
+// ========================================================
+// MÓDULOS DE LIMPIEZA E HIGIENE
+// ========================================================
 
-    // ========================================================
-    // MÓDULOS DE LIMPIEZA E HIGIENE
-    // ========================================================
+// Alturas reales de las superficies de las repisas.
+// El mobiliario tiene repisas en:
+// 0.32, 0.66, 1.00, 1.34 y 1.68.
+// Se agrega 0.06 para colocar los productos encima.
+const nivelesHigiene = [
+    0.38,
+    0.72,
+    1.06,
+    1.40,
+    1.74
+];
 
-    // Las alturas corresponden a los niveles de los racks.
-    // Se conserva la ubicación de los módulos del archivo original.
+const offsetsXHigiene = [
+    -0.95,
+    -0.35,
+    0.35,
+    0.95
+];
 
-    const nivelesHigiene = [
-        0.4575,
-        0.8075,
-        1.1575,
-        1.5075,
-        1.8575
-    ];
+const usoModulosHigiene = new Map();
 
-    const offsetsXHigiene = [
-        -0.95,
-        -0.35,
-        0.35,
-        0.95
-    ];
+function obtenerPosicionesHigiene(categoria) {
+    const indice = usoModulosHigiene.get(categoria) ?? 0;
 
-    const usoModulosHigiene = new Map();
+    usoModulosHigiene.set(categoria, indice + 1);
 
-    function obtenerPosicionesHigiene(categoria) {
-        const indice = usoModulosHigiene.get(categoria) ?? 0;
+    const nivel = Math.floor(indice / 2);
+    const mitad = indice % 2;
 
-        usoModulosHigiene.set(categoria, indice + 1);
+    const offsets = mitad === 0
+        ? offsetsXHigiene.slice(0, 2)
+        : offsetsXHigiene.slice(2, 4);
 
-        const nivel = Math.min(
-            Math.floor(indice / 2),
-            nivelesHigiene.length - 1
-        );
-
-        const mitad = indice % 2;
-
-        const offsets = mitad === 0
-            ? offsetsXHigiene.slice(0, 2)
-            : offsetsXHigiene.slice(2, 4);
-
-        // Cada departamento tiene su propio módulo.
-        const modulo = categoria === 'Limpieza'
-            ? {
-                x: 28.3,
-                z: 8.15,
-                id: 'Rack_Limpieza'
-            }
-            : {
-                x: 28.3,
-                z: 3.5,
-                id: 'Rack_Higiene'
-            };
-
-        return {
-            idRack: modulo.id,
-
-            posiciones: offsets.map((offsetX) => ({
-                x: modulo.x + offsetX,
-                y: nivelesHigiene[nivel],
-                z: modulo.z
-            }))
+    // Módulos físicos existentes en mobiliario.js.
+    const modulo = categoria === 'Limpieza'
+        ? {
+            x: 28.3,
+            z: 8.0,
+            id: 'Modulo_limpieza'
+        }
+        : {
+            x: 28.3,
+            z: 3.3,
+            id: 'Modulo_higiene'
         };
-    }
 
+    const nivelSeguro = Math.min(
+        nivel,
+        nivelesHigiene.length - 1
+    );
+
+    return {
+        idRack: modulo.id,
+
+        posiciones: offsets.map((offsetX) => ({
+            x: modulo.x + offsetX,
+            y: nivelesHigiene[nivelSeguro],
+            z: modulo.z + 0.25
+        }))
+    };
+}
     // ========================================================
     // CATÁLOGO DE PRODUCTOS
     // ========================================================
@@ -976,18 +976,16 @@ export function crearProductosLacteos(scene) {
 
         // FRUTAS Y VERDURAS
         { archivo: '/modelos/Brocoli.glb', nombre: 'Brocoli', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 0, alto: 0.28, ancho: 0.30, profundidad: 0.28 },
-        { archivo: '/modelos/Elote.glb', nombre: 'Elote', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 0, alto: 0.30, ancho: 0.24, profundidad: 0.24 },
-        { archivo: '/modelos/Limon.glb', nombre: 'Limon', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 0, alto: 0.20, ancho: 0.20, profundidad: 0.20 },
-        { archivo: '/modelos/Jalapeño.glb', nombre: 'Jalapeno', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.20, ancho: 0.20, profundidad: 0.20 },
-        { archivo: '/modelos/Mazana.glb', nombre: 'Manzana', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.22, ancho: 0.22, profundidad: 0.22 },
-        { archivo: '/modelos/Pepino.glb', nombre: 'Pepino', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.28, ancho: 0.22, profundidad: 0.22 },
-        { archivo: '/modelos/Pera.glb', nombre: 'Pera', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.22, ancho: 0.22, profundidad: 0.22 },
+       { archivo: '/modelos/Elote.glb', nombre: 'Elote', categoria: 'Frutas y verduras', tipo: 'gondola', alto: 0.30, ancho: 0.24, profundidad: 0.24 },
+       { archivo: '/modelos/Limon.glb', nombre: 'Limon', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 0, alto: 0.20, ancho: 0.20, profundidad: 0.20 },
+{ archivo: '/modelos/Jalapeño.glb', nombre: 'Jalapeno', categoria: 'Frutas y verduras', tipo: 'gondola', alto: 0.20, ancho: 0.20, profundidad: 0.20 },
+ { archivo: '/modelos/Mazana.glb', nombre: 'Manzana', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.22, ancho: 0.22, profundidad: 0.22 },
+{ archivo: '/modelos/Pepino.glb', nombre: 'Pepino', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.28, ancho: 0.22, profundidad: 0.22 },        { archivo: '/modelos/Pera.glb', nombre: 'Pera', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.22, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/Uvas.glb', nombre: 'Uvas', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.24, ancho: 0.28, profundidad: 0.24 },
         { archivo: '/modelos/Nutrileche.glb', nombre: 'Nutrileche', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 0, nivel: 3, alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/LechePura.glb', nombre: 'Leche Pura', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 1, nivel: 0, alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/Naranja.glb', nombre: 'Naranja', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.28, ancho: 0.28, profundidad: 0.28 },
-        { archivo: '/modelos/PIÑA.glb', nombre: 'Piña', categoria: 'Frutas y verduras', tipo: 'gondola', alto: 0.42, ancho: 0.38, profundidad: 0.38 },
-
+{ archivo: '/modelos/PIÑA.glb', nombre: 'Piña', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.42, ancho: 0.38, profundidad: 0.38 },
         // CARNICERÍA
         { archivo: '/modelos/costilla.glb', nombre: 'Costilla', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.30, ancho: 0.38, profundidad: 0.32 },
         { archivo: '/modelos/salchichas.glb', nombre: 'Salchichas', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.28, ancho: 0.38, profundidad: 0.30 },
