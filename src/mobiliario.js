@@ -319,7 +319,16 @@ registrarColision(
 
     {
         const dep = departamento('06_REFRIGERADORES');
-        const posicionesX = [-27, -23.5, -20, -16.5, 16.5, 20, 27];
+        const posicionesX = [
+    -27,
+    -23.5,
+    -20,
+    -16.5,
+    16.5,
+    20,
+    23.5,
+    27
+];
 
         posicionesX.forEach((x, i) => {
             crearRefrigerador(
