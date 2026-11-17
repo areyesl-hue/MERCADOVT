@@ -1,4 +1,3 @@
-
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
@@ -207,9 +206,6 @@ let indiceSiguienteLadron = 0;
 // ============================================================
 
 const CONFIG_CAMARAS = [
-
-    // GÓNDOLAS IZQUIERDAS
-
     {
         nombre: 'Cámara 1 - Góndola izquierda frontal',
         posicion: { x: -20.5, y: 2.35, z: 10 },
@@ -234,9 +230,6 @@ const CONFIG_CAMARAS = [
         objetivo: { x: -17, y: 1.15, z: 0 },
         fov: 43
     },
-
-    // GÓNDOLAS CENTRALES
-
     {
         nombre: 'Cámara 5 - Góndola central izquierda frontal',
         posicion: { x: -12.5, y: 2.35, z: 10 },
@@ -261,9 +254,6 @@ const CONFIG_CAMARAS = [
         objetivo: { x: 9, y: 1.15, z: 0 },
         fov: 43
     },
-
-    // GÓNDOLAS DERECHAS
-
     {
         nombre: 'Cámara 9 - Góndola derecha frontal',
         posicion: { x: 12.5, y: 2.35, z: 10 },
@@ -288,9 +278,6 @@ const CONFIG_CAMARAS = [
         objetivo: { x: 17, y: 1.15, z: -13 },
         fov: 43
     },
-
-    // REFRIGERADORES
-
     {
         nombre: 'Cámara 13 - Refrigeradores extremos izquierdos',
         posicion: { x: -30, y: 2.5, z: -21.5 },
@@ -315,9 +302,6 @@ const CONFIG_CAMARAS = [
         objetivo: { x: 27, y: 1.25, z: -26.5 },
         fov: 42
     },
-
-    // FRUTAS Y VERDURAS
-
     {
         nombre: 'Cámara 17 - Frutas mesa exterior izquierda',
         posicion: { x: -29, y: 2.5, z: 19 },
@@ -342,9 +326,6 @@ const CONFIG_CAMARAS = [
         objetivo: { x: -21.7, y: 0.9, z: 10.8 },
         fov: 40
     },
-
-    // PANADERÍA Y VITRINAS
-
     {
         nombre: 'Cámara 21 - Vitrinas derecha superior',
         posicion: { x: 20.5, y: 2.5, z: 17.5 },
@@ -357,9 +338,6 @@ const CONFIG_CAMARAS = [
         objetivo: { x: 25.2, y: 1.1, z: 11.4 },
         fov: 42
     },
-
-    // CAJAS Y ENTRADA
-
     {
         nombre: 'Cámara 23 - Cajas registradoras izquierdas',
         posicion: { x: -20, y: 3.2, z: 22 },
@@ -384,9 +362,6 @@ const CONFIG_CAMARAS = [
         objetivo: { x: 0, y: 1.2, z: 5 },
         fov: 55
     },
-
-    // ESTACIONAMIENTO
-
     {
         nombre: 'Cámara 27 - Entrada de vehículos',
         posicion: { x: -13, y: 5, z: 33 },
@@ -686,8 +661,7 @@ function generarSiguienteLadron() {
         temporizadorLadrones =
             MINIMO_INTERVALO_LADRONES +
             Math.random() *
-            (MAXIMO_INTERVALO_LADRONES -
-                MINIMO_INTERVALO_LADRONES);
+            (MAXIMO_INTERVALO_LADRONES - MINIMO_INTERVALO_LADRONES);
 
         return;
     }
@@ -762,8 +736,7 @@ function actualizarGeneradorLadrones(delta) {
         temporizadorLadrones =
             MINIMO_INTERVALO_LADRONES +
             Math.random() *
-            (MAXIMO_INTERVALO_LADRONES -
-                MINIMO_INTERVALO_LADRONES);
+            (MAXIMO_INTERVALO_LADRONES - MINIMO_INTERVALO_LADRONES);
     }
 }
 
@@ -1392,6 +1365,7 @@ function finalizarPagoVisitante(visita, ticket) {
     if (ticket) {
         const ticketGuardado = {
             ...ticket,
+            nombreCliente: visita.nombreCliente ?? 'Cliente',
             fecha: ticket.fecha ?? new Date().toLocaleString('es-MX')
         };
 
@@ -1401,6 +1375,8 @@ function finalizarPagoVisitante(visita, ticket) {
             ticketGuardado,
             visita.nombreCliente ?? 'Cliente'
         );
+
+        actualizarHUD();
     }
 
     iniciarRegresoVisitante(visita);
@@ -1601,7 +1577,7 @@ function registrarTrayectoria(posicion) {
 }
 
 // ============================================================
-// TICKETS
+// TICKETS: FUNCIONES DE DATOS
 // ============================================================
 
 function obtenerArticulosTicket(ticket) {
@@ -1636,71 +1612,508 @@ function obtenerSubtotalArticulo(articulo) {
     return precio * cantidad;
 }
 
-function exportarTickets() {
-    if (!ticketsGenerados.length) {
-        mostrarMensaje('Todavía no hay tickets generados.');
-
-        return;
-    }
-
-    const filas = [
-        'ticket,cliente,fecha,producto,cantidad,precio_unitario,subtotal,total'
-    ];
-
-    for (const ticket of ticketsGenerados) {
-        for (const articulo of obtenerArticulosTicket(ticket)) {
-            const cantidad = Number(articulo.cantidad ?? 1);
-            const subtotal = obtenerSubtotalArticulo(articulo);
-
-            const valores = [
-                ticket.idTicket ?? '',
-                ticket.idCliente ?? '',
-                ticket.fecha ?? '',
-                articulo.nombre ?? articulo.nombreProducto ?? '',
-                cantidad,
-                articulo.precioUnitario ?? articulo.precio ?? 0,
-                subtotal,
-                ticket.total ?? 0
-            ];
-
-            filas.push(
-                valores.map(valor =>
-                    `"${String(valor).replaceAll('"', '""')}"`
-                ).join(',')
-            );
-        }
-    }
-
-    descargarCSV(
-        filas.join('\n'),
-        'tickets_supermercado.csv'
-    );
-
-    mostrarMensaje('Tickets exportados.');
+function escaparHTML(valor) {
+    return String(valor ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 }
 
-function descargarCSV(contenido, nombreArchivo) {
-    const blob = new Blob(
-        ['\uFEFF', contenido],
-        { type: 'text/csv;charset=utf-8;' }
-    );
-
-    const url = URL.createObjectURL(blob);
-    const enlace = document.createElement('a');
-
-    enlace.href = url;
-    enlace.download = nombreArchivo;
-
-    document.body.appendChild(enlace);
-
-    enlace.click();
-    enlace.remove();
-
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+function formatoMoneda(valor) {
+    return Number(valor || 0).toLocaleString('es-MX', {
+        style: 'currency',
+        currency: 'MXN'
+    });
 }
 
 // ============================================================
-// MOSTRAR TICKET
+// EXPORTAR TODOS LOS TICKETS A PDF
+// ============================================================
+
+function exportarTickets() {
+    if (!ticketsGenerados.length) {
+        mostrarMensaje('Todavía no hay tickets generados.');
+        return;
+    }
+
+    const ventana = window.open('', '_blank');
+
+    if (!ventana) {
+        mostrarMensaje(
+            'Permite las ventanas emergentes para exportar los tickets.'
+        );
+        return;
+    }
+
+    const ticketsHTML = ticketsGenerados.map((ticket, indice) => {
+        const articulos = obtenerArticulosTicket(ticket);
+
+        let totalCalculado = 0;
+
+        const filas = articulos.map(articulo => {
+            const cantidad = Math.max(
+                1,
+                Number(articulo.cantidad ?? 1)
+            );
+
+            const precio = Number(
+                articulo.precioUnitario ?? articulo.precio ?? 0
+            );
+
+            const subtotal = obtenerSubtotalArticulo(articulo);
+
+            totalCalculado += subtotal;
+
+            const nombreProducto =
+                articulo.nombre ??
+                articulo.nombreProducto ??
+                articulo.producto ??
+                'Producto';
+
+            return `
+                <tr>
+                    <td class="producto">
+                        ${escaparHTML(nombreProducto)}
+                    </td>
+
+                    <td class="cantidad">
+                        ${cantidad}
+                    </td>
+
+                    <td class="precio">
+                        ${formatoMoneda(precio)}
+                    </td>
+
+                    <td class="importe">
+                        ${formatoMoneda(subtotal)}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        const total = Number.isFinite(Number(ticket.total))
+            ? Number(ticket.total)
+            : totalCalculado;
+
+        const folio = ticket.idTicket ?? `T-${indice + 1}`;
+
+        const cliente =
+            ticket.nombreCliente ??
+            ticket.idCliente ??
+            'Cliente';
+
+        const fecha =
+            ticket.fecha ??
+            new Date().toLocaleString('es-MX');
+
+        return `
+            <section class="ticket">
+
+                <header class="encabezado">
+                    <div class="marca">SUPERMERCADO 3D</div>
+
+                    <h1>COMPROBANTE DE COMPRA</h1>
+
+                    <p class="gracias">
+                        Gracias por realizar tu compra
+                    </p>
+                </header>
+
+                <div class="informacion">
+                    <div>
+                        <strong>Folio:</strong>
+                        <span>${escaparHTML(folio)}</span>
+                    </div>
+
+                    <div>
+                        <strong>Cliente:</strong>
+                        <span>${escaparHTML(cliente)}</span>
+                    </div>
+
+                    <div>
+                        <strong>Fecha:</strong>
+                        <span>${escaparHTML(fecha)}</span>
+                    </div>
+                </div>
+
+                <div class="separador"></div>
+
+                <h2 class="titulo-productos">DETALLE DE COMPRA</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cant.</th>
+                            <th>Precio</th>
+                            <th>Importe</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        ${filas || `
+                            <tr>
+                                <td colspan="4" class="sin-productos">
+                                    Sin productos registrados
+                                </td>
+                            </tr>
+                        `}
+                    </tbody>
+                </table>
+
+                <div class="resumen">
+                    <div class="total">
+                        <span>TOTAL A PAGAR</span>
+                        <strong>${formatoMoneda(total)}</strong>
+                    </div>
+                </div>
+
+                <footer class="pie">
+                    <p class="conservar">
+                        Conserve este comprobante de compra.
+                    </p>
+
+                    <p>
+                        ¡Gracias por su preferencia!
+                    </p>
+
+                    <small>
+                        SUPERMERCADO 3D
+                    </small>
+                </footer>
+
+            </section>
+        `;
+    }).join('');
+
+    ventana.document.open();
+
+    ventana.document.write(`
+        <!DOCTYPE html>
+        <html lang="es">
+
+        <head>
+            <meta charset="UTF-8">
+
+            <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1.0"
+            >
+
+            <title>Tickets del supermercado</title>
+
+            <style>
+                * {
+                    box-sizing: border-box;
+                }
+
+                html,
+                body {
+                    margin: 0;
+                    padding: 0;
+                    font-family: Arial, Helvetica, sans-serif;
+                    color: #171717;
+                    background: #e9edf0;
+                }
+
+                body {
+                    padding: 25px;
+                    font-size: 16px;
+                }
+
+                .ticket {
+                    width: 100%;
+                    max-width: 780px;
+                    min-height: 850px;
+                    margin: 0 auto 30px;
+                    padding: 42px;
+                    background: #fff;
+                    border: 1px solid #d8d8d8;
+                    box-shadow: 0 4px 18px rgba(0, 0, 0, .08);
+
+                    page-break-after: always;
+                    break-after: page;
+                }
+
+                .ticket:last-child {
+                    page-break-after: auto;
+                    break-after: auto;
+                }
+
+                .encabezado {
+                    text-align: center;
+                    padding-bottom: 25px;
+                    margin-bottom: 25px;
+                    border-bottom: 3px dashed #555;
+                }
+
+                .marca {
+                    font-size: 32px;
+                    font-weight: 900;
+                    letter-spacing: 2px;
+                    margin-bottom: 12px;
+                }
+
+                .encabezado h1 {
+                    margin: 0 0 12px;
+                    font-size: 22px;
+                    font-weight: 800;
+                }
+
+                .gracias {
+                    margin: 0;
+                    font-size: 17px;
+                }
+
+                .informacion {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 11px;
+                    margin-bottom: 25px;
+                    font-size: 17px;
+                    line-height: 1.5;
+                }
+
+                .informacion div {
+                    display: flex;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                }
+
+                .informacion strong {
+                    min-width: 90px;
+                }
+
+                .separador {
+                    border-top: 2px dashed #777;
+                    margin: 20px 0;
+                }
+
+                .titulo-productos {
+                    margin: 22px 0 15px;
+                    font-size: 19px;
+                    letter-spacing: .5px;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    table-layout: fixed;
+                    margin-bottom: 28px;
+                    font-size: 15px;
+                }
+
+                th {
+                    padding: 15px 9px;
+                    background: #e9edf0;
+                    border-bottom: 2px solid #333;
+                    text-align: left;
+                    font-size: 14px;
+                    font-weight: 800;
+                }
+
+                td {
+                    padding: 15px 9px;
+                    border-bottom: 1px solid #ccc;
+                    vertical-align: middle;
+                    line-height: 1.45;
+                }
+
+                th:first-child,
+                td:first-child {
+                    width: 43%;
+                }
+
+                th:nth-child(2),
+                td:nth-child(2) {
+                    width: 13%;
+                }
+
+                th:nth-child(3),
+                td:nth-child(3) {
+                    width: 21%;
+                }
+
+                th:nth-child(4),
+                td:nth-child(4) {
+                    width: 23%;
+                }
+
+                .producto {
+                    font-weight: 700;
+                    overflow-wrap: anywhere;
+                }
+
+                .cantidad {
+                    text-align: center;
+                }
+
+                .precio,
+                .importe {
+                    text-align: right;
+                    white-space: nowrap;
+                }
+
+                .sin-productos {
+                    text-align: center;
+                    padding: 25px;
+                }
+
+                .resumen {
+                    border-top: 3px dashed #555;
+                    padding-top: 23px;
+                    margin-top: 25px;
+                }
+
+                .total {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 15px;
+                    font-size: 23px;
+                    font-weight: 900;
+                }
+
+                .total strong {
+                    font-size: 30px;
+                    white-space: nowrap;
+                }
+
+                .pie {
+                    margin-top: 55px;
+                    padding-top: 22px;
+                    border-top: 1px dashed #777;
+                    text-align: center;
+                    font-size: 16px;
+                    line-height: 1.7;
+                }
+
+                .pie p {
+                    margin: 6px 0;
+                }
+
+                .pie small {
+                    display: block;
+                    margin-top: 15px;
+                    font-size: 13px;
+                    font-weight: 800;
+                    letter-spacing: 2px;
+                }
+
+                @page {
+                    size: A4;
+                    margin: 12mm;
+                }
+
+                @media print {
+                    html,
+                    body {
+                        width: 100%;
+                        padding: 0;
+                        margin: 0;
+                        background: white;
+                        font-size: 16px;
+                        print-color-adjust: exact;
+                        -webkit-print-color-adjust: exact;
+                    }
+
+                    .ticket {
+                        width: 100%;
+                        max-width: none;
+                        min-height: 0;
+                        margin: 0;
+                        padding: 8mm 5mm;
+                        border: none;
+                        box-shadow: none;
+                        break-after: page;
+                        page-break-after: always;
+                    }
+
+                    .ticket:last-child {
+                        break-after: auto;
+                        page-break-after: auto;
+                    }
+
+                    .marca {
+                        font-size: 28pt;
+                    }
+
+                    .encabezado h1 {
+                        font-size: 17pt;
+                    }
+
+                    .gracias {
+                        font-size: 13pt;
+                    }
+
+                    .informacion {
+                        font-size: 13pt;
+                    }
+
+                    .titulo-productos {
+                        font-size: 15pt;
+                    }
+
+                    table {
+                        font-size: 12pt;
+                    }
+
+                    th {
+                        font-size: 11pt;
+                        padding: 11pt 6pt;
+                    }
+
+                    td {
+                        font-size: 12pt;
+                        padding: 12pt 6pt;
+                    }
+
+                    .total {
+                        font-size: 18pt;
+                    }
+
+                    .total strong {
+                        font-size: 23pt;
+                    }
+
+                    .pie {
+                        font-size: 12pt;
+                    }
+
+                    .pie small {
+                        font-size: 10pt;
+                    }
+                }
+            </style>
+        </head>
+
+        <body>
+            ${ticketsHTML}
+
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.focus();
+                        window.print();
+                    }, 700);
+                };
+            <\/script>
+        </body>
+
+        </html>
+    `);
+
+    ventana.document.close();
+
+    mostrarMensaje(
+        'Tickets preparados. Selecciona "Guardar como PDF" en la ventana de impresión.'
+    );
+}
+
+// ============================================================
+// MOSTRAR TICKET INDIVIDUAL
 // ============================================================
 
 function mostrarTicket(ticket, nombreCliente = 'Cliente') {
@@ -1716,10 +2129,27 @@ function mostrarTicket(ticket, nombreCliente = 'Cliente') {
 
     const lista = obtenerArticulosTicket(ticket);
 
-    datos.textContent =
-        `Folio: ${ticket.idTicket ?? 'SIN FOLIO'} | ` +
-        `Cliente: ${ticket.idCliente ?? nombreCliente} | ` +
-        `Fecha: ${ticket.fecha ?? new Date().toLocaleString('es-MX')}`;
+    datos.replaceChildren();
+
+    const informacionTicket = [
+        ['Folio', ticket.idTicket ?? 'SIN FOLIO'],
+        ['Cliente', ticket.nombreCliente ?? ticket.idCliente ?? nombreCliente],
+        ['Fecha', ticket.fecha ?? new Date().toLocaleString('es-MX')]
+    ];
+
+    for (const [etiqueta, valor] of informacionTicket) {
+        const linea = document.createElement('div');
+        linea.className = 'ticket-linea-dato';
+
+        const titulo = document.createElement('strong');
+        titulo.textContent = `${etiqueta}:`;
+
+        const contenido = document.createElement('span');
+        contenido.textContent = String(valor);
+
+        linea.append(titulo, contenido);
+        datos.append(linea);
+    }
 
     articulos.replaceChildren();
 
@@ -1737,7 +2167,6 @@ function mostrarTicket(ticket, nombreCliente = 'Cliente') {
             'Producto';
 
         const cantidad = document.createElement('td');
-
         cantidad.textContent = String(articulo.cantidad ?? 1);
 
         const importe = document.createElement('td');
@@ -1746,7 +2175,7 @@ function mostrarTicket(ticket, nombreCliente = 'Cliente') {
 
         totalCalculado += subtotal;
 
-        importe.textContent = `$${subtotal.toFixed(2)}`;
+        importe.textContent = formatoMoneda(subtotal);
 
         fila.append(nombre, cantidad, importe);
 
@@ -1757,7 +2186,7 @@ function mostrarTicket(ticket, nombreCliente = 'Cliente') {
         ? Number(ticket.total)
         : totalCalculado;
 
-    totalElemento.textContent = `$${total.toFixed(2)}`;
+    totalElemento.textContent = formatoMoneda(total);
 
     ventana.style.display = 'flex';
 }
@@ -1912,187 +2341,360 @@ function crearInterfaz() {
 
     estilos.textContent = `
         .boton-supermercado {
-            padding:8px 11px;
-            border:1px solid rgba(255,255,255,.2);
-            border-radius:6px;
-            background:#164d3b;
-            color:white;
-            font:bold 11px Arial;
-            cursor:pointer;
+            padding: 8px 11px;
+            border: 1px solid rgba(255,255,255,.2);
+            border-radius: 6px;
+            background: #164d3b;
+            color: white;
+            font: bold 11px Arial;
+            cursor: pointer;
         }
 
         .boton-supermercado:hover {
-            background:#217a59;
+            background: #217a59;
         }
 
         #panel-camaras .boton-supermercado:active {
-            background:#2c9b70;
+            background: #2c9b70;
         }
 
         #hud-supermercado {
-            position:fixed;
-            left:10px;
-            top:10px;
-            z-index:100;
-            padding:10px;
-            color:white;
-            background:rgba(0,0,0,.72);
-            border-radius:7px;
-            font:12px/1.6 Arial;
-            pointer-events:none;
+            position: fixed;
+            left: 10px;
+            top: 10px;
+            z-index: 100;
+            padding: 10px;
+            color: white;
+            background: rgba(0,0,0,.72);
+            border-radius: 7px;
+            font: 12px/1.6 Arial;
+            pointer-events: none;
         }
 
         #acciones-supermercado {
-            position:fixed;
-            top:10px;
-            right:10px;
-            z-index:150;
-            display:flex;
-            flex-wrap:wrap;
-            justify-content:flex-end;
-            gap:5px;
-            max-width:420px;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 150;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 5px;
+            max-width: 420px;
         }
 
         #mensaje-supermercado {
-            position:fixed;
-            left:50%;
-            bottom:165px;
-            transform:translateX(-50%);
-            z-index:200;
-            padding:8px 13px;
-            color:white;
-            background:rgba(0,0,0,.8);
-            border-radius:6px;
-            font:12px Arial;
-            pointer-events:none;
+            position: fixed;
+            left: 50%;
+            bottom: 165px;
+            transform: translateX(-50%);
+            z-index: 200;
+            padding: 8px 13px;
+            color: white;
+            background: rgba(0,0,0,.8);
+            border-radius: 6px;
+            font: 12px Arial;
+            pointer-events: none;
         }
 
         #portada-supermercado {
-            position:fixed;
-            inset:0;
-            z-index:1000;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            flex-direction:column;
-            gap:13px;
-            padding:20px;
-            color:white;
-            background:linear-gradient(135deg,#0b1b29,#164d50);
-            font-family:Arial;
-            text-align:center;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 13px;
+            padding: 20px;
+            color: white;
+            background: linear-gradient(135deg,#0b1b29,#164d50);
+            font-family: Arial;
+            text-align: center;
         }
 
         #portada-supermercado h1 {
-            font-size:clamp(28px,5vw,48px);
-            margin:0;
+            font-size: clamp(28px,5vw,48px);
+            margin: 0;
         }
 
+        /* =========================================
+           VENTANA DEL TICKET
+        ========================================= */
+
         #ticket-supermercado {
-            position:fixed;
-            inset:0;
-            z-index:2000;
-            display:none;
-            align-items:center;
-            justify-content:center;
-            padding:15px;
-            background:rgba(0,0,0,.78);
-            font-family:Arial;
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0,0,0,.78);
+            font-family: Arial, Helvetica, sans-serif;
         }
 
         #ticket-contenido {
-            width:min(380px,94vw);
-            max-height:85vh;
-            overflow:auto;
-            padding:22px;
-            background:white;
-            color:#222;
-            border-radius:8px;
+            width: min(650px, 95vw);
+            max-height: 90vh;
+            overflow: auto;
+            padding: 35px;
+            background: white;
+            color: #222;
+            border-radius: 12px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 17px;
+            box-shadow: 0 10px 40px rgba(0,0,0,.3);
         }
 
         #ticket-contenido h2 {
-            text-align:center;
+            font-size: 29px;
+            text-align: center;
+            margin: 0 0 25px;
+            color: #164d3b;
+        }
+
+        #ticket-datos {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+            font-size: 17px;
+            line-height: 1.6;
+        }
+
+        .ticket-linea-dato {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .ticket-linea-dato strong {
+            min-width: 85px;
         }
 
         #ticket-contenido table {
-            width:100%;
-            border-collapse:collapse;
-            font-size:12px;
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 16px;
+            table-layout: fixed;
         }
 
-        #ticket-contenido td,
         #ticket-contenido th {
-            padding:7px 3px;
-            border-bottom:1px dashed #bbb;
-            text-align:left;
+            padding: 14px 9px;
+            border-bottom: 2px solid #333;
+            background: #edf0f2;
+            text-align: left;
+            font-size: 15px;
+        }
+
+        #ticket-contenido td {
+            padding: 14px 9px;
+            border-bottom: 1px solid #ccc;
+            text-align: left;
+            font-size: 16px;
+            line-height: 1.45;
+            overflow-wrap: anywhere;
+        }
+
+        #ticket-contenido th:first-child,
+        #ticket-contenido td:first-child {
+            width: 52%;
+        }
+
+        #ticket-contenido th:nth-child(2),
+        #ticket-contenido td:nth-child(2) {
+            width: 15%;
+            text-align: center;
+        }
+
+        #ticket-contenido th:nth-child(3),
+        #ticket-contenido td:nth-child(3) {
+            width: 33%;
+            text-align: right;
         }
 
         #ticket-contenido .ticket-total {
-            display:flex;
-            justify-content:space-between;
-            margin-top:15px;
-            font-weight:bold;
-            font-size:19px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 3px dashed #555;
+            font-weight: 900;
+            font-size: 25px;
+        }
+
+        #ticket-total {
+            font-size: 30px;
+            white-space: nowrap;
         }
 
         #ticket-contenido .ticket-botones {
-            display:flex;
-            gap:8px;
-            margin-top:15px;
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
         }
 
         #ticket-contenido .ticket-botones button {
-            flex:1;
+            flex: 1;
+            padding: 12px;
+            font-size: 13px;
         }
 
         @media(max-width:650px) {
             #hud-supermercado {
-                left:5px;
-                top:5px;
-                max-width:150px;
-                font-size:10px;
+                left: 5px;
+                top: 5px;
+                max-width: 150px;
+                font-size: 10px;
             }
 
             #acciones-supermercado {
-                top:5px;
-                right:5px;
-                max-width:180px;
+                top: 5px;
+                right: 5px;
+                max-width: 180px;
             }
 
             .boton-supermercado {
-                padding:6px;
-                font-size:9px;
+                padding: 6px;
+                font-size: 9px;
             }
 
             #panel-camaras {
-                max-height:120px !important;
+                max-height: 120px !important;
+            }
+
+            #ticket-contenido {
+                padding: 20px;
+                font-size: 15px;
+            }
+
+            #ticket-contenido h2 {
+                font-size: 23px;
+            }
+
+            #ticket-contenido table {
+                font-size: 14px;
+            }
+
+            #ticket-contenido th,
+            #ticket-contenido td {
+                padding: 10px 5px;
+                font-size: 13px;
+            }
+
+            #ticket-contenido .ticket-total {
+                font-size: 21px;
+            }
+
+            #ticket-total {
+                font-size: 24px;
             }
         }
 
+        /* =========================================
+           IMPRESIÓN DEL TICKET INDIVIDUAL
+        ========================================= */
+
         @media print {
+            @page {
+                size: A4;
+                margin: 12mm;
+            }
+
+            html,
+            body {
+                width: 100%;
+                height: auto;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+            }
+
             body * {
-                visibility:hidden !important;
+                visibility: hidden !important;
             }
 
             #ticket-supermercado,
             #ticket-supermercado * {
-                visibility:visible !important;
+                visibility: visible !important;
             }
 
             #ticket-supermercado {
-                position:absolute;
-                display:flex !important;
-                background:white;
+                position: absolute !important;
+                inset: 0 !important;
+                display: flex !important;
+                align-items: flex-start !important;
+                justify-content: center !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                background: white !important;
             }
 
             #ticket-contenido {
-                max-height:none;
-                box-shadow:none;
+                width: 100% !important;
+                max-width: 180mm !important;
+                max-height: none !important;
+                overflow: visible !important;
+                padding: 12mm !important;
+                margin: 0 auto !important;
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                color: #111 !important;
+                background: white !important;
+                font-size: 16pt !important;
+            }
+
+            #ticket-contenido h2 {
+                margin-bottom: 22pt !important;
+                font-size: 24pt !important;
+                color: #111 !important;
+            }
+
+            #ticket-datos {
+                gap: 12pt !important;
+                margin-bottom: 24pt !important;
+                font-size: 14pt !important;
+                line-height: 1.6 !important;
+            }
+
+            .ticket-linea-dato {
+                margin-bottom: 5pt !important;
+            }
+
+            #ticket-contenido table {
+                width: 100% !important;
+                font-size: 13pt !important;
+            }
+
+            #ticket-contenido th {
+                padding: 12pt 7pt !important;
+                font-size: 12pt !important;
+                background: #e9edf0 !important;
+            }
+
+            #ticket-contenido td {
+                padding: 13pt 7pt !important;
+                font-size: 13pt !important;
+                line-height: 1.4 !important;
+            }
+
+            #ticket-contenido .ticket-total {
+                margin-top: 24pt !important;
+                padding-top: 18pt !important;
+                font-size: 20pt !important;
+            }
+
+            #ticket-total {
+                font-size: 25pt !important;
             }
 
             #ticket-contenido .ticket-botones {
-                display:none;
+                display: none !important;
+                visibility: hidden !important;
             }
         }
     `;
@@ -2110,6 +2712,7 @@ function crearInterfaz() {
         <p>Explora el supermercado virtual.</p>
         <p>WASD: mover | SHIFT: correr | ESPACIO: saltar</p>
         <p>1-9: cámaras | F1-F12: cámaras adicionales | 0: volver</p>
+
         <button id="btn-entrar" class="boton-supermercado">
             ENTRAR AL SUPERMERCADO
         </button>
@@ -2157,7 +2760,7 @@ function crearInterfaz() {
 
     acciones.innerHTML = `
         <button id="btn-tickets" class="boton-supermercado">
-            EXPORTAR TICKETS
+            EXPORTAR TICKETS PDF
         </button>
     `;
 
@@ -2182,7 +2785,7 @@ function crearInterfaz() {
         <div id="ticket-contenido">
             <h2>SUPERMERCADO 3D</h2>
 
-            <p id="ticket-datos"></p>
+            <div id="ticket-datos"></div>
 
             <table>
                 <thead>
@@ -2227,7 +2830,7 @@ function crearInterfaz() {
         controles.lock();
     };
 
-    // EXPORTAR TICKETS
+    // EXPORTAR TICKETS PDF
 
     document.getElementById('btn-tickets').onclick =
         exportarTickets;
@@ -2238,7 +2841,7 @@ function crearInterfaz() {
         ticket.style.display = 'none';
     };
 
-    // IMPRIMIR TICKET
+    // IMPRIMIR TICKET INDIVIDUAL
 
     document.getElementById('ticket-imprimir').onclick = () => {
         window.print();
