@@ -1,4 +1,3 @@
-
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -405,10 +404,7 @@ export function crearProductosLacteos(scene) {
         return dimensiones;
     }
 
-    // ========================================================
-    // CREAR UNIDAD DE PRODUCTO
-    // ========================================================
-
+        // CREAR UNIDAD DE PRODUCTO
     function crearCopia(
         fuente,
         nombre,
@@ -421,33 +417,23 @@ export function crearProductosLacteos(scene) {
         limites = {}
     ) {
         if (!fuente) return null;
-
         const datosFuente = obtenerDimensionesFuente(fuente);
-
         if (!datosFuente) {
             console.warn(`Modelo sin geometría: ${nombre}`);
             return null;
         }
-
         const modelo = fuente.clone(true);
-
         modelo.name = nombre;
         modelo.position.set(0, 0, 0);
         modelo.scale.setScalar(1);
         modelo.rotation.set(0, rotacionY, 0);
-
         modelo.updateMatrixWorld(true);
-
         const cajaRotada = new THREE.Box3().setFromObject(modelo);
-
         if (cajaRotada.isEmpty()) return null;
-
         const dimensionesRotadas = new THREE.Vector3();
         const centroRotado = new THREE.Vector3();
-
         cajaRotada.getSize(dimensionesRotadas);
         cajaRotada.getCenter(centroRotado);
-
         if (
             dimensionesRotadas.x <= 0.0001 ||
             dimensionesRotadas.y <= 0.0001 ||
@@ -458,147 +444,119 @@ export function crearProductosLacteos(scene) {
             console.warn(`Dimensiones inválidas para ${nombre}.`);
             return null;
         }
-const esBlusaOSudadera =
-    nombre.toLowerCase().includes('blusa') ||
-    nombre.toLowerCase().includes('sudadera negra');
 
-const esCarne =
-    nombre.toLowerCase().includes('pollo') ||
-    nombre.toLowerCase().includes('filete');
+        const esBlusaOSudadera =
+            nombre.toLowerCase().includes('blusa') ||
+            nombre.toLowerCase().includes('sudadera negra');
 
-const dimensionMaximaEstandar =
-    esBlusaOSudadera
-        ? 1.00
-        : esCarne
-            ? 0.65
-            : categoria === 'Ropa'
-                ? 0.72
-                : categoria === 'Frutas y verduras'
-                    ? 0.46
-                    : 0.32;
+        const nombreNormalizado = nombre.toLowerCase();
+        const esCarne =
+            nombreNormalizado.includes('pollo') ||
+            nombreNormalizado.includes('filete') ||
+            nombreNormalizado.includes('costilla') ||
+            nombreNormalizado.includes('salchichas');
+
+        const dimensionMaximaEstandar =
+            esBlusaOSudadera
+                ? 1.00
+                : esCarne
+                    ? 0.65
+                    : categoria === 'Ropa'
+                        ? 0.72
+                        : categoria === 'Frutas y verduras'
+                            ? 0.46
+                            : 0.32;
 
         const escala = dimensionMaximaEstandar / Math.max(
             dimensionesRotadas.x,
             dimensionesRotadas.y,
             dimensionesRotadas.z
         );
-
         modelo.scale.setScalar(escala);
         modelo.updateMatrixWorld(true);
-
         const cajaFinal = new THREE.Box3().setFromObject(modelo);
-
         if (cajaFinal.isEmpty()) return null;
-
         const centroFinal = new THREE.Vector3();
         const dimensionesFinales = new THREE.Vector3();
-
         cajaFinal.getCenter(centroFinal);
         cajaFinal.getSize(dimensionesFinales);
-
         const posicionY = categoria === 'Ropa'
             ? 1.72 - cajaFinal.max.y
             : y - cajaFinal.min.y;
-
         modelo.position.set(
             x - centroFinal.x,
             posicionY,
             z - centroFinal.z
         );
-
         modelo.updateMatrixWorld(true);
-
         const idUnidad =
             `UNIDAD_${String(siguienteIdUnidad++).padStart(5, '0')}`;
-
         const codigoCatalogo = obtenerCodigoCatalogo(nombre);
         const precio = obtenerPrecio(codigoCatalogo);
-
         modelo.userData.esUnidadProducto = true;
         modelo.userData.tipo = 'producto';
         modelo.userData.esProducto = true;
-
         modelo.userData.idUnidadProducto = idUnidad;
         modelo.userData.codigoProducto = idUnidad;
         modelo.userData.codigoCatalogo = codigoCatalogo;
         modelo.userData.skuProducto = codigoCatalogo;
-
         modelo.userData.nombreProducto = codigoCatalogo;
         modelo.userData.nombre = nombre;
         modelo.userData.nombreVisible = nombre;
         modelo.userData.nombreUnidad = nombre;
         modelo.userData.codigo = codigoCatalogo;
-
         modelo.userData.precio = precio;
         modelo.userData.moneda = 'MXN';
         modelo.userData.categoria = categoria;
         modelo.userData.idRack = limites.idRack ?? categoria;
         modelo.userData.rackId = modelo.userData.idRack;
         modelo.userData.departamento = categoria;
-
         modelo.userData.recogido = false;
         modelo.userData.vendido = false;
         modelo.userData.reservado = false;
         modelo.userData.enCarrito = false;
         modelo.userData.disponible = true;
-
         modelo.userData.posicionEstante = { x, y, z };
-
         modelo.userData.rotacionEstante = {
             x: modelo.rotation.x,
             y: modelo.rotation.y,
             z: modelo.rotation.z
         };
-
         modelo.userData.escalaEstante = {
             x: modelo.scale.x,
             y: modelo.scale.y,
             z: modelo.scale.z
         };
-
         modelo.updateMatrixWorld(true);
-
         const cajaMedicion = new THREE.Box3().setFromObject(modelo);
         const tamanoFinal = new THREE.Vector3();
-
         cajaMedicion.getSize(tamanoFinal);
-
         modelo.userData.dimensionesFinales = {
             ancho: tamanoFinal.x,
             alto: tamanoFinal.y,
             profundidad: tamanoFinal.z
         };
-
         modelo.userData.superficieApoyo = y;
         modelo.userData.baseReal = cajaMedicion.min.y;
-
         productos.add(modelo);
-
         unidades.push(modelo);
         unidadesPorId.set(idUnidad, modelo);
-
         unidadesColocadas++;
-
         return modelo;
     }
 
-    // ========================================================
     // PLÁTANOS
-    // ========================================================
-
     const posicionesPlatanos = [
         [-1.25, -0.62],
         [-0.625, -0.62],
         [0.00, -0.62],
         [0.625, -0.62],
         [1.25, -0.62],
-
         [-1.25, 0.00],
         [-0.625, 0.00],
         [0.00, 0.00],
         [0.625, 0.00],
         [1.25, 0.00],
-
         [-1.25, 0.62],
         [-0.625, 0.62],
         [0.00, 0.62],
@@ -617,15 +575,12 @@ const dimensionMaximaEstandar =
         'Plátano',
         (original) => {
             const fuentes = crearFuentesIndependientes(original);
-
             if (!fuentes.length) {
                 console.error('El modelo de plátano no contiene geometría.');
                 return;
             }
-
             posicionesPlatanos.forEach(([dx, dz], indice) => {
                 const fuente = fuentes[indice % fuentes.length];
-
                 crearCopia(
                     fuente,
                     `PLATANO_N1_${indice + 1}`,
@@ -642,18 +597,14 @@ const dimensionMaximaEstandar =
                     }
                 );
             });
-
             console.info(
                 `🍌 Se colocaron ${posicionesPlatanos.length} plátanos.`
             );
         }
     );
 
-    // ========================================================
     // GÓNDOLAS
     // Productos en los extremos de ambos lados
-    // ========================================================
-
     const gondolas = [
         [-17, -13], [-17, 0], [-17, 13],
         [-9, -13], [-9, 0], [-9, 13],
@@ -681,18 +632,14 @@ const dimensionMaximaEstandar =
 
     function obtenerFilaGondola() {
         const fila = siguienteFilaGondola++;
-
         const indiceGondola = fila % gondolas.length;
-
         const nivel =
             Math.floor(fila / gondolas.length) %
             nivelesGondola.length;
-
         const [centroX, centroZ] = gondolas[indiceGondola];
 
         return {
             idRack: `Gondola_${String(indiceGondola + 1).padStart(2, '0')}`,
-
             posiciones: [-1, 1].flatMap((lado) =>
                 offsetsZGondola.map((offsetZ) => ({
                     // Se acercan también al borde lateral.
@@ -705,10 +652,7 @@ const dimensionMaximaEstandar =
         };
     }
 
-    // ========================================================
     // MESAS DE FRUTAS Y VERDURAS
-    // ========================================================
-
     const mesasFrutas = [
         { x: -25.5, z: 15, rack: 'Mesa_frescos_01' },
         { x: -21.7, z: 15, rack: 'Mesa_frescos_02' },
@@ -721,16 +665,12 @@ const dimensionMaximaEstandar =
         [-0.43, -0.62],
         [0.43, -0.62],
         [1.30, -0.62],
-
         [1.30, 0.00],
-
         [1.30, 0.62],
         [0.43, 0.62],
         [-0.43, 0.62],
         [-1.30, 0.62],
-
         [-1.30, 0.00],
-
         [-0.43, 0.00],
         [0.43, 0.00]
     ];
@@ -739,9 +679,7 @@ const dimensionMaximaEstandar =
 
     function obtenerPosicionesMesa(indiceMesa) {
         const mesa = mesasFrutas[indiceMesa];
-
         const inicio = usoMesasFrutas.get(indiceMesa) ?? 0;
-
         const posiciones = offsetsMesaFrutas.slice(
             inicio,
             inicio + 4
@@ -754,7 +692,6 @@ const dimensionMaximaEstandar =
 
         return {
             idRack: mesa.rack,
-
             posiciones: posiciones.map(([dx, dz]) => ({
                 x: mesa.x + dx,
                 y: 1.0,
@@ -763,11 +700,8 @@ const dimensionMaximaEstandar =
         };
     }
 
-    // ========================================================
     // REFRIGERADORES
     // Productos hacia los extremos de cada nivel
-    // ========================================================
-
     const refrigeradoresX = [
         -27,
         -23.5,
@@ -806,7 +740,6 @@ const dimensionMaximaEstandar =
         return {
             idRack:
                 `Refrigerador_${String(indiceRefrigerador + 1).padStart(2, '0')}`,
-
             posiciones: offsetsXRefrigerador.map((offsetX) => ({
                 x: x + offsetX,
                 y: nivelesRefrigerador[nivel],
@@ -815,10 +748,7 @@ const dimensionMaximaEstandar =
         };
     }
 
-    // ========================================================
     // HIGIENE
-    // ========================================================
-
     const nivelesHigiene = [
         0.4575,
         0.8075,
@@ -838,7 +768,6 @@ const dimensionMaximaEstandar =
 
     function obtenerPosicionesHigiene() {
         const indice = siguienteProductoHigiene++;
-
         const nivel = Math.floor(indice / 2);
         const mitad = indice % 2;
 
@@ -848,7 +777,6 @@ const dimensionMaximaEstandar =
 
         return {
             idRack: 'Modulo_limpieza',
-
             posiciones: offsets.map((offsetX) => ({
                 x: 28.3 + offsetX,
                 y: nivelesHigiene[nivel],
@@ -856,11 +784,7 @@ const dimensionMaximaEstandar =
             }))
         };
     }
-
-    // ========================================================
-    // CATÁLOGO DE PRODUCTOS
-    // ========================================================
-
+        // CATÁLOGO DE PRODUCTOS
     const catalogoProductosAdicionales = [
         { archivo: '/modelos/Aceite.glb', nombre: 'Aceite', categoria: 'Abarrotes', tipo: 'gondola', alto: 0.36, ancho: 0.26, profundidad: 0.26 },
         { archivo: '/modelos/Atun.glb', nombre: 'Atún', categoria: 'Enlatados', tipo: 'gondola', alto: 0.28, ancho: 0.34, profundidad: 0.30 },
@@ -915,6 +839,30 @@ const dimensionMaximaEstandar =
         { archivo: '/modelos/Pera.glb', nombre: 'Pera', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.22, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/Uvas.glb', nombre: 'Uvas', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.24, ancho: 0.28, profundidad: 0.24 },
 
+        // NUEVOS PRODUCTOS: LÁCTEOS
+        { archivo: '/modelos/Nutrileche.glb', nombre: 'Nutrileche', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 6, nivel: 0, alto: 0.38, ancho: 0.28, profundidad: 0.25 },
+        { archivo: '/modelos/LechePura.glb', nombre: 'Leche Pura', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 1, nivel: 3, alto: 0.38, ancho: 0.28, profundidad: 0.25 },
+
+        // NUEVAS FRUTAS
+        { archivo: '/modelos/Naranja.glb', nombre: 'Naranja', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.28, ancho: 0.28, profundidad: 0.28 },
+        { archivo: '/modelos/PIÑA.glb', nombre: 'Piña', categoria: 'Frutas y verduras', tipo: 'gondola', alto: 0.42, ancho: 0.38, profundidad: 0.38 },
+
+        // NUEVOS PRODUCTOS: CARNICERÍA
+        { archivo: '/modelos/costilla.glb', nombre: 'Costilla', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.30, ancho: 0.38, profundidad: 0.32 },
+        { archivo: '/modelos/salchichas.glb', nombre: 'Salchichas', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.28, ancho: 0.38, profundidad: 0.30 },
+
+        // NUEVOS JUGOS Y BEBIDAS
+        { archivo: '/modelos/Limonada.glb', nombre: 'Limonada', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 0, nivel: 2, alto: 0.40, ancho: 0.24, profundidad: 0.24 },
+        { archivo: '/modelos/Naranjada.glb', nombre: 'Naranjada', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 0, nivel: 3, alto: 0.40, ancho: 0.24, profundidad: 0.24 },
+
+        // NUEVAS CERVEZAS
+        { archivo: '/modelos/Cerveza Lager.glb', nombre: 'Cerveza Lager', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 2, nivel: 2, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
+        { archivo: '/modelos/Cerveza XX.glb', nombre: 'Cerveza XX', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 2, nivel: 3, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
+        { archivo: '/modelos/Cerveza Corona.glb', nombre: 'Cerveza Corona', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 3, nivel: 2, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
+        { archivo: '/modelos/Cerveza Barrilitio.glb', nombre: 'Cerveza Barrilitio', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 3, nivel: 3, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
+        { archivo: '/modelos/Carta Blanca.glb', nombre: 'Carta Blanca', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 4, nivel: 3, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
+        { archivo: '/modelos/Tecate.glb', nombre: 'Tecate', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 5, nivel: 2, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
+
         { archivo: '/modelos/cloro_liquido.glb', nombre: 'Cloro liquido', categoria: 'Limpieza', tipo: 'higiene', alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/detergente_liquido.glb', nombre: 'Detergente liquido', categoria: 'Limpieza', tipo: 'higiene', alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/detergente_liquido1.glb', nombre: 'Detergente liquido 2', categoria: 'Limpieza', tipo: 'higiene', alto: 0.38, ancho: 0.28, profundidad: 0.25 },
@@ -934,11 +882,7 @@ const dimensionMaximaEstandar =
         { archivo: '/modelos/sudaderaroja.glb', nombre: 'Sudadera roja', categoria: 'Ropa', tipo: 'ropa', alto: 0.72, ancho: 0.42, profundidad: 0.24 },
         { archivo: '/modelos/vesitdo.glb', nombre: 'Vestido', categoria: 'Ropa', tipo: 'ropa', alto: 0.72, ancho: 0.42, profundidad: 0.24 }
     ];
-
-    // ========================================================
-    // UBICACIÓN DE PRODUCTOS
-    // ========================================================
-
+        // UBICACIÓN DE PRODUCTOS
     let siguientePerchero = 0;
     let siguienteMostrador = 0;
 
@@ -965,17 +909,18 @@ const dimensionMaximaEstandar =
         if (catalogo.tipo === 'mostrador') {
             const indice = siguienteMostrador++;
 
-            const offsets = indice === 0
+            const offsets = indice % 2 === 0
                 ? [-1.0, -0.5, 0]
                 : [0.5, 1.0, 1.25];
 
+            const filaZ = Math.floor(indice / 2) * 0.42;
+
             return {
                 idRack: 'Mostrador_carniceria',
-
                 posiciones: offsets.map((offsetX) => ({
                     x: 25.1 + offsetX,
                     y: 1.26,
-                    z: -7.3
+                    z: -7.3 + filaZ
                 }))
             };
         }
@@ -1011,7 +956,6 @@ const dimensionMaximaEstandar =
 
         return {
             idRack: percha.rack,
-
             posiciones: offsets.map((offsetX) => ({
                 x: percha.x + offsetX,
                 y: 1.0,
@@ -1020,10 +964,7 @@ const dimensionMaximaEstandar =
         };
     }
 
-    // ========================================================
     // COLOCAR PRODUCTOS
-    // ========================================================
-
     function colocarCatalogoProductos(catalogo) {
         const ubicacion = obtenerUbicacion(catalogo);
 
@@ -1193,7 +1134,7 @@ const dimensionMaximaEstandar =
     // ========================================================
 
     console.info(
-        'Catálogo iniciado: únicamente 15 plátanos a $8 MXN cada uno.'
+        'Catálogo del supermercado iniciado. Los 15 plátanos tienen precio de $8 MXN; los demás productos requieren precio configurado en PRECIOS.'
     );
 
     return productos;
