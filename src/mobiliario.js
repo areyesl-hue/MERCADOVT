@@ -447,15 +447,6 @@ registrarColision(
             { tipo: 'limpieza' }
         );
 
-        // Rack 2: papel higiénico
-        crearModuloHigiene(
-            dep,
-            'Rack_papel_higienico',
-            24.5,
-            8.0,
-            mat.azul,
-            { tipo: 'papel_higienico' }
-        );
 
         // Rack 3: toallitas húmedas
         crearModuloHigiene(
