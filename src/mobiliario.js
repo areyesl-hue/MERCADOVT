@@ -264,11 +264,138 @@ registrarColision(
         crearMesaFrescos(dep, 'Mesa_frescos_04', -21.7, 10.8);
     }
 
+
     // ============================================================
     // 05. PANADERÍA
     // ============================================================
 
-    departamento('05_PANADERIA');
+    function crearMueblePanaderia(padre, nombre, x, z) {
+        const g = grupo(nombre, padre, x, z);
+
+        const ancho = 3.8;
+        const fondo = 1.65;
+
+        // Base inferior de madera
+        caja(g, 'Base_inferior', 0, 0.12, 0,
+            ancho, 0.24, fondo, mat.madera);
+
+        caja(g, 'Zocalo_frontal', 0, 0.13, fondo / 2 + 0.025,
+            ancho - 0.12, 0.20, 0.06, mat.maderaClara);
+
+        // Panel posterior
+        caja(g, 'Panel_trasero', 0, 1.35, -fondo / 2 + 0.04,
+            ancho, 2.45, 0.10, mat.madera);
+
+        // Laterales decorativos
+        for (const dx of [-ancho / 2 + 0.08, ancho / 2 - 0.08]) {
+            caja(g, 'Lateral_madera', dx, 1.20, 0,
+                0.16, 2.15, fondo, mat.maderaClara);
+
+            caja(g, 'Decoracion_lateral', dx, 2.30, 0,
+                0.18, 0.12, fondo + 0.04, mat.madera);
+        }
+
+        // Tres niveles de exhibición
+        const niveles = [
+            { y: 0.65, profundidad: 1.25, z: 0.05 },
+            { y: 1.15, profundidad: 1.10, z: -0.04 },
+            { y: 1.65, profundidad: 0.95, z: -0.12 }
+        ];
+
+        niveles.forEach((nivel, i) => {
+            caja(g, `Repisa_pan_${i + 1}`,
+                0, nivel.y, nivel.z,
+                ancho - 0.40, 0.09, nivel.profundidad,
+                mat.maderaClara);
+
+            // Superficie metálica para las charolas
+            caja(g, `Superficie_charolas_${i + 1}`,
+                0, nivel.y + 0.055, nivel.z,
+                ancho - 0.52, 0.025, nivel.profundidad - 0.12,
+                mat.acero);
+
+            // Borde frontal de la repisa
+            caja(g, `Borde_repisa_${i + 1}`,
+                0, nivel.y + 0.11,
+                nivel.z + nivel.profundidad / 2,
+                ancho - 0.42, 0.09, 0.055,
+                mat.madera);
+        });
+
+        // Divisiones para separar los tipos de pan
+        for (const y of [0.72, 1.22, 1.72]) {
+            for (const dx of [-1.0, 0, 1.0]) {
+                caja(g, 'Separador_charola',
+                    dx, y + 0.10, 0.12,
+                    0.035, 0.10, 0.78,
+                    mat.acero);
+            }
+        }
+
+        // Soportes decorativos superiores
+        for (const dx of [-1.65, 1.65]) {
+            caja(g, 'Soporte_superior',
+                dx, 2.45, -0.55,
+                0.09, 0.65, 0.09,
+                mat.madera);
+        }
+
+        caja(g, 'Marco_letrero',
+            0, 2.75, -0.55,
+            3.45, 0.55, 0.12,
+            mat.madera);
+
+        caja(g, 'Franja_letrero',
+            0, 2.75, -0.475,
+            3.20, 0.36, 0.035,
+            mat.naranja);
+
+        // Iluminación decorativa superior
+        caja(g, 'Luz_exhibidor',
+            0, 2.42, 0.30,
+            3.15, 0.07, 0.10,
+            mat.luz);
+
+        // Patas y soportes inferiores
+        for (const dx of [-1.55, 1.55]) {
+            for (const dz of [-0.58, 0.58]) {
+                caja(g, 'Pata',
+                    dx, 0.30, dz,
+                    0.12, 0.35, 0.12,
+                    mat.estructura);
+            }
+        }
+
+        // Datos para colocar los productos de panadería
+        g.userData.nivelesProducto = [0.76, 1.26, 1.76];
+        g.userData.superficieProductoY = [0.76, 1.26, 1.76];
+        g.userData.ancho = ancho - 0.50;
+        g.userData.fondo = fondo;
+        g.userData.tipoEstanteria = 'panaderia';
+        g.userData.frenteZ = fondo / 2;
+
+        registrarColision(
+            nombre,
+            x,
+            z,
+            ancho + 0.15,
+            fondo + 0.15,
+            { tipo: 'panaderia' }
+        );
+
+        return g;
+    }
+
+    {
+        const dep = departamento('05_PANADERIA');
+
+        crearMueblePanaderia(
+            dep,
+            'Exhibidor_panaderia_01',
+            25.2,
+            -15.5
+        );
+    }
 
     // ============================================================
     // 06. REFRIGERADORES
