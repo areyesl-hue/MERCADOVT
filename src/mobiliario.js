@@ -177,14 +177,15 @@ export function crearMobiliario(scene, mercado = null) {
 
         caja(g, 'Franja_superior', 0, 2.04, 0, ancho, 0.10, largo - 0.1, mat.azul);
 
-registrarColision(
-    nombre,
-    x,
-    z,
-    0.80,
-    5.45,
-    { tipo: 'gondola' }
-);
+        registrarColision(
+            nombre,
+            x,
+            z,
+            0.80,
+            5.45,
+            { tipo: 'gondola' }
+        );
+
         g.userData.esGondola = true;
         g.userData.ancho = ancho;
         g.userData.largo = largo;
@@ -268,7 +269,215 @@ registrarColision(
     // 05. PANADERÍA
     // ============================================================
 
-    departamento('05_PANADERIA');
+    function crearVitrinaPanaderia(padre, nombre, x, z) {
+        const g = grupo(nombre, padre, x, z);
+
+        const ancho = 4.8;
+        const fondo = 1.35;
+
+        // Cuerpo principal
+        caja(
+            g, 'Cuerpo_vitrina',
+            0, 0.48, 0,
+            ancho, 0.90, fondo,
+            mat.madera
+        );
+
+        // Zócalo
+        caja(
+            g, 'Zocalo',
+            0, 0.10, 0,
+            ancho + 0.08, 0.18, fondo + 0.08,
+            mat.estructura
+        );
+
+        // Cubierta
+        caja(
+            g, 'Cubierta',
+            0, 0.96, 0,
+            ancho + 0.12, 0.12, fondo + 0.12,
+            mat.maderaClara
+        );
+
+        // Bandejas
+        for (let i = 0; i < 3; i++) {
+            const xBandeja = -1.55 + i * 1.55;
+
+            caja(
+                g, `Bandeja_pan_${i + 1}`,
+                xBandeja, 1.08, 0,
+                1.35, 0.045, 0.88,
+                mat.acero
+            );
+
+            caja(
+                g, `Borde_bandeja_${i + 1}`,
+                xBandeja, 1.13, 0.43,
+                1.35, 0.09, 0.045,
+                mat.madera
+            );
+        }
+
+        // Cristal posterior y laterales
+        caja(
+            g, 'Cristal_trasero',
+            0, 1.43, -0.52,
+            ancho - 0.15, 0.55, 0.035,
+            mat.cristal
+        );
+
+        caja(
+            g, 'Cristal_lateral_izquierdo',
+            -ancho / 2 + 0.05, 1.43, 0,
+            0.035, 0.55, fondo - 0.08,
+            mat.cristal
+        );
+
+        caja(
+            g, 'Cristal_lateral_derecho',
+            ancho / 2 - 0.05, 1.43, 0,
+            0.035, 0.55, fondo - 0.08,
+            mat.cristal
+        );
+
+        // Soportes
+        for (const dx of [-2.25, 0, 2.25]) {
+            caja(
+                g, 'Soporte_vitrina',
+                dx, 1.43, 0,
+                0.055, 0.58, 0.055,
+                mat.metal
+            );
+        }
+
+        // Decoración frontal
+        caja(
+            g, 'Franja_panaderia',
+            0, 0.55, fondo / 2 + 0.025,
+            ancho - 0.15, 0.30, 0.045,
+            mat.naranja
+        );
+
+        g.userData.superficieProductoY = 1.12;
+        g.userData.tipoEstanteria = 'panaderia';
+
+        registrarColision(
+            nombre,
+            x, z,
+            ancho + 0.20,
+            fondo + 0.20,
+            { tipo: 'vitrina_panaderia' }
+        );
+
+        return g;
+    }
+
+    function crearEstantePanaderia(padre, nombre, x, z) {
+        const g = grupo(nombre, padre, x, z);
+
+        const ancho = 4.8;
+        const fondo = 0.85;
+        const niveles = [0.48, 0.95, 1.42, 1.89];
+
+        // Panel posterior
+        caja(
+            g, 'Panel_trasero',
+            0, 1.15, -0.35,
+            ancho, 2.30, 0.10,
+            mat.madera
+        );
+
+        // Montantes
+        for (const dx of [-2.30, 2.30]) {
+            caja(
+                g, 'Montante',
+                dx, 1.15, 0,
+                0.09, 2.30, 0.10,
+                mat.estructura
+            );
+
+            caja(
+                g, 'Pie',
+                dx, 0.08, 0,
+                0.24, 0.14, 0.28,
+                mat.oscuro
+            );
+        }
+
+        // Repisas
+        niveles.forEach((y, i) => {
+            caja(
+                g, `Repisa_${i + 1}`,
+                0, y, 0.12,
+                ancho - 0.20, 0.075, 0.65,
+                mat.maderaClara
+            );
+
+            caja(
+                g, `Borde_${i + 1}`,
+                0, y + 0.055, 0.45,
+                ancho - 0.25, 0.07, 0.045,
+                mat.madera
+            );
+        });
+
+        // Franja superior
+        caja(
+            g, 'Franja_superior',
+            0, 2.35, 0.08,
+            ancho, 0.20, 0.16,
+            mat.naranja
+        );
+
+        g.userData.nivelesProducto = niveles;
+        g.userData.frenteZ = 0.475;
+        g.userData.tipoEstanteria = 'panaderia';
+
+        registrarColision(
+            nombre,
+            x, z,
+            ancho + 0.15,
+            fondo + 0.15,
+            { tipo: 'estanteria_panaderia' }
+        );
+
+        return g;
+    }
+
+    {
+        const dep = departamento('05_PANADERIA');
+
+        crearVitrinaPanaderia(
+            dep,
+            'Vitrina_panaderia_01',
+            25.0,
+            -15.5
+        );
+
+        crearVitrinaPanaderia(
+            dep,
+            'Vitrina_panaderia_02',
+            25.0,
+            -18.0
+        );
+
+        crearEstantePanaderia(
+            dep,
+            'Estante_panaderia_01',
+            25.0,
+            -22.0
+        );
+
+        crearLetrero(
+            dep,
+            'Letrero_panaderia',
+            'PANADERIA',
+            25.0,
+            2.85,
+            -14.5,
+            0x9b5728
+        );
+    }
 
     // ============================================================
     // 06. REFRIGERADORES
@@ -303,14 +512,16 @@ registrarColision(
 
         caja(g, 'Luz_interior', 0, 2.24, 0.12,
             ancho - 0.35, 0.045, 0.06, mat.luz);
-registrarColision(
-    nombre,
-    x,
-    z,
-    2.80,
-    1.05,
-    { tipo: 'refrigerador' }
-);
+
+        registrarColision(
+            nombre,
+            x,
+            z,
+            2.80,
+            1.05,
+            { tipo: 'refrigerador' }
+        );
+
         g.userData.nivelesProducto = niveles;
         g.userData.frenteZ = z + fondo / 2;
 
@@ -319,16 +530,11 @@ registrarColision(
 
     {
         const dep = departamento('06_REFRIGERADORES');
+
         const posicionesX = [
-    -27,
-    -23.5,
-    -20,
-    -16.5,
-    16.5,
-    20,
-    23.5,
-    27
-];
+            -27, -23.5, -20, -16.5,
+            16.5, 20, 23.5, 27
+        ];
 
         posicionesX.forEach((x, i) => {
             crearRefrigerador(
@@ -383,25 +589,20 @@ registrarColision(
         const fondo = 0.85;
         const niveles = [0.43, 0.78, 1.13, 1.48, 1.83];
 
-        // Panel trasero
         caja(g, 'Panel_trasero', 0, 1.00, -0.30,
             ancho, 2.0, 0.09, mat.gris);
 
-        // Zócalo inferior
         caja(g, 'Zocalo', 0, 0.12, 0.05,
             ancho + 0.05, 0.24, fondo, mat.estructura);
 
-        // Cinco repisas
         niveles.forEach((y, i) => {
             caja(g, `Repisa_${i + 1}`, 0, y, 0.15,
                 ancho - 0.12, 0.065, 0.65, mat.acero);
 
-            // Borde frontal para evitar que los productos parezcan caerse
             caja(g, `Borde_repisa_${i + 1}`, 0, y + 0.045, 0.49,
                 ancho - 0.18, 0.055, 0.045, mat.estructura);
         });
 
-        // Montantes laterales
         for (const dx of [-ancho / 2 + 0.04, ancho / 2 - 0.04]) {
             caja(g, 'Montante', dx, 1.00, 0.15,
                 0.075, 2.0, 0.075, mat.metal);
@@ -410,11 +611,9 @@ registrarColision(
                 0.22, 0.12, 0.30, mat.estructura);
         }
 
-        // Franja superior de identificación
         caja(g, 'Franja_identificacion', 0, 2.08, 0.02,
             ancho, 0.18, 0.14, color);
 
-        // Superficie frontal y datos para colocar productos
         g.userData.nivelesProducto = niveles;
         g.userData.superficieProductoY = niveles.map(y => y + 0.04);
         g.userData.frenteZ = 0.15 + 0.65 / 2;
@@ -437,7 +636,6 @@ registrarColision(
     {
         const dep = departamento('09_HIGIENE_Y_LIMPIEZA');
 
-        // Rack 1: productos de limpieza
         crearModuloHigiene(
             dep,
             'Modulo_limpieza',
@@ -447,8 +645,6 @@ registrarColision(
             { tipo: 'limpieza' }
         );
 
-
-        // Rack 3: toallitas húmedas
         crearModuloHigiene(
             dep,
             'Rack_toallitas_humedas',
@@ -495,7 +691,6 @@ registrarColision(
 
     // ============================================================
     // 11. CAJAS REGISTRADORAS
-    // EL MUEBLE QUEDA DETRÁS DEL PUNTO DE ATENCIÓN
     // ============================================================
 
     function crearCajaRegistradora(padre, nombre, x, z, numero) {
@@ -530,24 +725,14 @@ registrarColision(
 
         g.userData.numeroCaja = numero;
 
-        registrarColision(
-            nombre,
-            x,
-            z,
-            3.05,
-            1.45,
-            { tipo: 'caja' }
-        );
+        registrarColision(nombre, x, z, 3.05, 1.45, { tipo: 'caja' });
 
-        // Coordenadas LOCALES del punto de atención.
-        // El cliente se coloca delante del mostrador.
         g.userData.posicionAtencion = {
             x: 0,
             y: 0,
             z: 1.45
         };
 
-        // También guardamos las coordenadas globales esperadas.
         g.userData.coordenadasAtencion = {
             x: x,
             y: 0,
@@ -560,8 +745,6 @@ registrarColision(
     {
         const dep = departamento('11_CAJAS_REGISTRADORAS');
 
-        // Centro de cada mueble: z = 22.5
-        // Atención de cada cliente: z = 23.95
         const posiciones = [
             [-17, 25.5],
             [-12, 25.5],
@@ -760,9 +943,11 @@ registrarColision(
                 ancho - 0.12, 0.035, largo - 0.12, mat.acero);
         }
 
-        registrarColision(nombre, x, z,
+        registrarColision(
+            nombre, x, z,
             ancho + 0.15, largo + 0.15,
-            { tipo: 'rack_almacen' });
+            { tipo: 'rack_almacen' }
+        );
 
         return g;
     }
@@ -790,7 +975,6 @@ registrarColision(
 
     {
         const dep = departamento('17_ALMACEN_INDUSTRIAL');
-
     }
 
     // ============================================================
@@ -879,7 +1063,6 @@ registrarColision(
 
     // ============================================================
     // 19. FILAS DE CAJAS
-    // POSTES LATERALES SIN BLOQUEAR EL ACCESO
     // ============================================================
 
     {
@@ -986,7 +1169,6 @@ registrarColision(
         );
     });
 
-    // Luminarias encima de las cuatro cajas.
     [
         [-17, 3, 22.5],
         [-12, 3, 22.5],
@@ -1002,6 +1184,13 @@ registrarColision(
     crearLuminaria(
         'Luminaria_frutas_verduras',
         -23.5, 3, 13, 0xfff1d6, 7, 9, 2.2, 0.45, false
+    );
+
+    // Iluminación de la panadería
+    crearLuminaria(
+        'Luminaria_panaderia',
+        25, 3.5, -18,
+        0xffd9a3, 7, 9, 2.8, 0.5, true
     );
 
     [
