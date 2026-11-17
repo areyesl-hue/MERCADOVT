@@ -377,42 +377,94 @@ registrarColision(
     // 09. HIGIENE Y LIMPIEZA
     // ============================================================
 
-    function crearModuloHigiene(padre, nombre, x, z, color) {
+    function crearModuloHigiene(padre, nombre, x, z, color, opciones = {}) {
         const g = grupo(nombre, padre, x, z);
-        const ancho = 2.8;
+        const ancho = opciones.ancho ?? 2.8;
+        const fondo = 0.85;
         const niveles = [0.43, 0.78, 1.13, 1.48, 1.83];
 
-        caja(g, 'Panel_trasero', 0, 0.98, -0.3,
-            ancho, 1.95, 0.09, mat.gris);
+        // Panel trasero
+        caja(g, 'Panel_trasero', 0, 1.00, -0.30,
+            ancho, 2.0, 0.09, mat.gris);
 
+        // Zócalo inferior
         caja(g, 'Zocalo', 0, 0.12, 0.05,
-            ancho, 0.24, 0.68, mat.estructura);
+            ancho + 0.05, 0.24, fondo, mat.estructura);
 
+        // Cinco repisas
         niveles.forEach((y, i) => {
             caja(g, `Repisa_${i + 1}`, 0, y, 0.15,
-                ancho - 0.12, 0.055, 0.60, mat.acero);
+                ancho - 0.12, 0.065, 0.65, mat.acero);
+
+            // Borde frontal para evitar que los productos parezcan caerse
+            caja(g, `Borde_repisa_${i + 1}`, 0, y + 0.045, 0.49,
+                ancho - 0.18, 0.055, 0.045, mat.estructura);
         });
 
-        for (const dx of [-1.34, 1.34]) {
-            caja(g, 'Montante', dx, 0.98, 0.15,
-                0.07, 1.95, 0.07, mat.metal);
+        // Montantes laterales
+        for (const dx of [-ancho / 2 + 0.04, ancho / 2 - 0.04]) {
+            caja(g, 'Montante', dx, 1.00, 0.15,
+                0.075, 2.0, 0.075, mat.metal);
+
+            caja(g, 'Pie_montante', dx, 0.08, 0.15,
+                0.22, 0.12, 0.30, mat.estructura);
         }
 
-        caja(g, 'Franja_identificacion', 0, 2.02, 0.02,
-            ancho, 0.12, 0.12, color);
+        // Franja superior de identificación
+        caja(g, 'Franja_identificacion', 0, 2.08, 0.02,
+            ancho, 0.18, 0.14, color);
 
-        registrarColision(nombre, x, z, 2.95, 0.85, { tipo: 'estanteria' });
-
+        // Superficie frontal y datos para colocar productos
         g.userData.nivelesProducto = niveles;
+        g.userData.superficieProductoY = niveles.map(y => y + 0.04);
+        g.userData.frenteZ = 0.15 + 0.65 / 2;
+        g.userData.ancho = ancho;
+        g.userData.fondo = fondo;
+        g.userData.tipoEstanteria = opciones.tipo ?? 'higiene';
+
+        registrarColision(
+            nombre,
+            x,
+            z,
+            ancho + 0.15,
+            fondo + 0.15,
+            { tipo: 'estanteria' }
+        );
+
         return g;
     }
 
     {
         const dep = departamento('09_HIGIENE_Y_LIMPIEZA');
 
+        // Rack 1: productos de limpieza
         crearModuloHigiene(
-            dep, 'Modulo_limpieza',
-            28.3, 8.0, mat.verde
+            dep,
+            'Modulo_limpieza',
+            28.3,
+            8.0,
+            mat.verde,
+            { tipo: 'limpieza' }
+        );
+
+        // Rack 2: papel higiénico
+        crearModuloHigiene(
+            dep,
+            'Rack_papel_higienico',
+            24.5,
+            8.0,
+            mat.azul,
+            { tipo: 'papel_higienico' }
+        );
+
+        // Rack 3: toallitas húmedas
+        crearModuloHigiene(
+            dep,
+            'Rack_toallitas_humedas',
+            28.3,
+            12.5,
+            mat.azulOscuro,
+            { tipo: 'toallitas_humedas' }
         );
     }
 
