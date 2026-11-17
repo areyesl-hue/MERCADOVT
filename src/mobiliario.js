@@ -791,9 +791,6 @@ registrarColision(
     {
         const dep = departamento('17_ALMACEN_INDUSTRIAL');
 
-
-        crearMesaAlmacen(dep, 'Mesa_preparacion_01', -18.5, -17.0);
-        crearMesaAlmacen(dep, 'Mesa_preparacion_02', 18.5, -17.0);
     }
 
     // ============================================================
