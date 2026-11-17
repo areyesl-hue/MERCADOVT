@@ -791,10 +791,6 @@ registrarColision(
     {
         const dep = departamento('17_ALMACEN_INDUSTRIAL');
 
-        crearRackIndustrial(dep, 'Rack_almacen_01', -24.0, -22.0);
-        crearRackIndustrial(dep, 'Rack_almacen_02', -19.8, -22.0);
-        crearRackIndustrial(dep, 'Rack_almacen_03', 19.8, -22.0);
-        crearRackIndustrial(dep, 'Rack_almacen_04', 24.0, -22.0);
 
         crearMesaAlmacen(dep, 'Mesa_preparacion_01', -18.5, -17.0);
         crearMesaAlmacen(dep, 'Mesa_preparacion_02', 18.5, -17.0);
