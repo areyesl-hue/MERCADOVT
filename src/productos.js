@@ -765,19 +765,6 @@ export function crearProductosLacteos(scene) {
     // REFRIGERADORES
     // ========================================================
 
-    // IMPORTANTE:
-    // El índice 6 corresponde al refrigerador de cervezas.
-    // Su posición física debe existir también en mobiliario.js.
-    //
-    // 0 = Leches
-    // 1 = Leche pura
-    // 2 = Pepsi y Coca-Cola
-    // 3 = Fanta
-    // 4 = Refrigerador disponible
-    // 5 = Monster
-    // 6 = Cervezas
-    // 7 = Agua y jugos
-
     const refrigeradoresX = [
         -27,
         -23.5,
@@ -853,71 +840,103 @@ export function crearProductosLacteos(scene) {
             }))
         };
     }
-// ========================================================
-// MÓDULOS DE LIMPIEZA E HIGIENE
-// ========================================================
 
-// Alturas reales de las superficies de las repisas.
-// El mobiliario tiene repisas en:
-// 0.32, 0.66, 1.00, 1.34 y 1.68.
-// Se agrega 0.06 para colocar los productos encima.
-const nivelesHigiene = [
-    0.38,
-    0.72,
-    1.06,
-    1.40,
-    1.74
-];
+    // ========================================================
+    // MÓDULOS DE LIMPIEZA E HIGIENE
+    // ========================================================
 
-const offsetsXHigiene = [
-    -0.95,
-    -0.35,
-    0.35,
-    0.95
-];
+    const nivelesHigiene = [
+        0.47,
+        0.82,
+        1.17,
+        1.52,
+        1.87
+    ];
 
-const usoModulosHigiene = new Map();
+    const offsetsXHigiene = [
+        -0.75,
+        0,
+        0.75
+    ];
 
-function obtenerPosicionesHigiene(categoria) {
-    const indice = usoModulosHigiene.get(categoria) ?? 0;
+    const usoModulosHigiene = new Map();
 
-    usoModulosHigiene.set(categoria, indice + 1);
+    function obtenerPosicionesHigiene(categoria, nombre = '') {
+        const nombreNormalizado = String(nombre)
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
 
-    const nivel = Math.floor(indice / 2);
-    const mitad = indice % 2;
+        let modulo;
 
-    const offsets = mitad === 0
-        ? offsetsXHigiene.slice(0, 2)
-        : offsetsXHigiene.slice(2, 4);
-
-    // Módulos físicos existentes en mobiliario.js.
-    const modulo = categoria === 'Limpieza'
-        ? {
-            x: 28.3,
-            z: 8.0,
-            id: 'Modulo_limpieza'
+        // PAPEL HIGIÉNICO
+        if (
+            nombreNormalizado.includes('papel') ||
+            nombreNormalizado.includes('higienico')
+        ) {
+            modulo = {
+                x: 24.5,
+                z: 8.0,
+                id: 'Rack_papel_higienico'
+            };
         }
-        : {
-            x: 28.3,
-            z: 3.3,
-            id: 'Modulo_higiene'
+
+        // TOALLITAS HÚMEDAS
+        else if (
+            nombreNormalizado.includes('toallita') ||
+            nombreNormalizado.includes('bebe')
+        ) {
+            modulo = {
+                x: 28.3,
+                z: 12.5,
+                id: 'Rack_toallitas_humedas'
+            };
+        }
+
+        // DETERGENTES Y PRODUCTOS DE LIMPIEZA
+        else {
+            modulo = {
+                x: 28.3,
+                z: 8.0,
+                id: 'Modulo_limpieza'
+            };
+        }
+
+        const clave = modulo.id;
+        const indice = usoModulosHigiene.get(clave) ?? 0;
+
+        usoModulosHigiene.set(clave, indice + 1);
+
+        const nivel = Math.floor(
+            indice / offsetsXHigiene.length
+        );
+
+        if (nivel >= nivelesHigiene.length) {
+            console.warn(
+                `No hay más espacios disponibles en ${modulo.id} para ${nombre}.`
+            );
+
+            return {
+                idRack: modulo.id,
+                posiciones: []
+            };
+        }
+
+        const offsetX = offsetsXHigiene[
+            indice % offsetsXHigiene.length
+        ];
+
+        return {
+            idRack: modulo.id,
+
+            posiciones: [{
+                x: modulo.x + offsetX,
+                y: nivelesHigiene[nivel],
+                z: modulo.z + 0.475
+            }]
         };
+    }
 
-    const nivelSeguro = Math.min(
-        nivel,
-        nivelesHigiene.length - 1
-    );
-
-    return {
-        idRack: modulo.id,
-
-        posiciones: offsets.map((offsetX) => ({
-            x: modulo.x + offsetX,
-            y: nivelesHigiene[nivelSeguro],
-            z: modulo.z + 0.25
-        }))
-    };
-}
     // ========================================================
     // CATÁLOGO DE PRODUCTOS
     // ========================================================
@@ -976,16 +995,28 @@ function obtenerPosicionesHigiene(categoria) {
 
         // FRUTAS Y VERDURAS
         { archivo: '/modelos/Brocoli.glb', nombre: 'Brocoli', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 0, alto: 0.28, ancho: 0.30, profundidad: 0.28 },
-       { archivo: '/modelos/Elote.glb', nombre: 'Elote', categoria: 'Frutas y verduras', tipo: 'gondola', alto: 0.30, ancho: 0.24, profundidad: 0.24 },
-       { archivo: '/modelos/Limon.glb', nombre: 'Limon', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 0, alto: 0.20, ancho: 0.20, profundidad: 0.20 },
-{ archivo: '/modelos/Jalapeño.glb', nombre: 'Jalapeno', categoria: 'Frutas y verduras', tipo: 'gondola', alto: 0.20, ancho: 0.20, profundidad: 0.20 },
- { archivo: '/modelos/Mazana.glb', nombre: 'Manzana', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.22, ancho: 0.22, profundidad: 0.22 },
-{ archivo: '/modelos/Pepino.glb', nombre: 'Pepino', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.28, ancho: 0.22, profundidad: 0.22 },        { archivo: '/modelos/Pera.glb', nombre: 'Pera', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.22, ancho: 0.22, profundidad: 0.22 },
+
+        // ELOTE EN GÓNDOLA DE FRUTAS Y VERDURAS
+        { archivo: '/modelos/Elote.glb', nombre: 'Elote', categoria: 'Frutas y verduras', tipo: 'gondola', alto: 0.30, ancho: 0.24, profundidad: 0.24 },
+
+        { archivo: '/modelos/Limon.glb', nombre: 'Limon', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 0, alto: 0.20, ancho: 0.20, profundidad: 0.20 },
+
+        // JALAPEÑO EN GÓNDOLA DE FRUTAS Y VERDURAS
+        { archivo: '/modelos/Jalapeño.glb', nombre: 'Jalapeno', categoria: 'Frutas y verduras', tipo: 'gondola', alto: 0.20, ancho: 0.20, profundidad: 0.20 },
+
+        { archivo: '/modelos/Mazana.glb', nombre: 'Manzana', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.22, ancho: 0.22, profundidad: 0.22 },
+        { archivo: '/modelos/Pepino.glb', nombre: 'Pepino', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.28, ancho: 0.22, profundidad: 0.22 },
+
+        { archivo: '/modelos/Pera.glb', nombre: 'Pera', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.22, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/Uvas.glb', nombre: 'Uvas', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.24, ancho: 0.28, profundidad: 0.24 },
+
         { archivo: '/modelos/Nutrileche.glb', nombre: 'Nutrileche', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 0, nivel: 3, alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/LechePura.glb', nombre: 'Leche Pura', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 1, nivel: 0, alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/Naranja.glb', nombre: 'Naranja', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.28, ancho: 0.28, profundidad: 0.28 },
-{ archivo: '/modelos/PIÑA.glb', nombre: 'Piña', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.42, ancho: 0.38, profundidad: 0.38 },
+
+        // PIÑA EN LA MESA DONDE ESTABA EL JALAPEÑO
+        { archivo: '/modelos/PIÑA.glb', nombre: 'Piña', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.42, ancho: 0.38, profundidad: 0.38 },
+
         // CARNICERÍA
         { archivo: '/modelos/costilla.glb', nombre: 'Costilla', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.30, ancho: 0.38, profundidad: 0.32 },
         { archivo: '/modelos/salchichas.glb', nombre: 'Salchichas', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.28, ancho: 0.38, profundidad: 0.30 },
@@ -1012,7 +1043,7 @@ function obtenerPosicionesHigiene(categoria) {
         { archivo: '/modelos/limpiador_multiusos.glb', nombre: 'Limpiador multiusos', categoria: 'Limpieza', tipo: 'higiene', alto: 0.36, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/suavizante_liquido.glb', nombre: 'Suavizante', categoria: 'Limpieza', tipo: 'higiene', alto: 0.38, ancho: 0.28, profundidad: 0.25 },
 
-        // HIGIENE: PAPEL Y TOALLITAS EN SU PROPIO RACK
+        // HIGIENE: PAPEL Y TOALLITAS EN SUS RACKS
         { archivo: '/modelos/papel.glb', nombre: 'Papel', categoria: 'Higiene', tipo: 'higiene', alto: 0.34, ancho: 0.30, profundidad: 0.28 },
         { archivo: '/modelos/toallitas_bebe.glb', nombre: 'Toallitas para bebe', categoria: 'Higiene', tipo: 'higiene', alto: 0.28, ancho: 0.30, profundidad: 0.24 },
 
@@ -1055,7 +1086,10 @@ function obtenerPosicionesHigiene(categoria) {
         }
 
         if (catalogo.tipo === 'higiene') {
-            return obtenerPosicionesHigiene(catalogo.categoria);
+            return obtenerPosicionesHigiene(
+                catalogo.categoria,
+                catalogo.nombre
+            );
         }
 
         if (catalogo.tipo === 'mostrador') {
