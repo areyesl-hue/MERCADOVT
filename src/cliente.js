@@ -648,6 +648,13 @@ console.log('[HUESO]', obj.name, '=>', normalizarNombre(obj.name));
 // ============================================================
 
 function crearTelefonoMovilEnMano() {
+
+    console.log('[PRUEBA CELULAR]', {
+        rigExiste: !!rig,
+        manoDerechaExiste: !!rig?.manoDerecha,
+        telefonoYaCreado: !!telefonoMovil
+    });
+
     if (!rig?.manoDerecha || telefonoMovil) return;
 
     const loaderTelefono = new GLTFLoader();
