@@ -5340,6 +5340,7 @@ function guardarProducto() {
     return candidatos[0].destino;
 }
  
+
 function dirigirseACaja(
     posicionCaja = config.posicionCaja,
     callback = null
@@ -5352,16 +5353,26 @@ function dirigirseACaja(
     callbackPagoPendiente =
         typeof callback === 'function' ? callback : null;
 
-    // Detener cualquier desplazamiento hacia la caja
     ruta = [];
     objetivo = null;
     indiceRuta = 0;
 
-    // El cliente comienza el pago desde su ubicación actual
-    cambiarEstado(ESTADOS.PAGANDO);
+    const puntoPago = obtenerPuntoPreparacionPago();
 
-    return true;
+    if (!puntoPago) {
+        console.warn(
+            `[CLIENTE ${id}] No encontró espacio para el pago móvil.`
+        );
+
+        return false;
+    }
+
+    return establecerObjetivo(
+        puntoPago,
+        ESTADOS.PREPARANDO_PAGO
+    );
 }
+
 
 
 
@@ -5915,6 +5926,7 @@ function actualizar(delta) {
             ESTADOS.RECOGIENDO,
             ESTADOS.INSPECCIONANDO,
             ESTADOS.GUARDANDO,
+            ESTADOS.PREPARANDO_PAGO,
             ESTADOS.DEVOLVIENDO,
             ESTADOS.PAGANDO
         ].includes(estado);
@@ -5924,148 +5936,121 @@ function actualizar(delta) {
         actualizarAnimacionAgarre(delta);
     }
 
-    switch (estado) {
+   
+switch (estado) {
 
-        case ESTADOS.INACTIVO:
-            break;
+    case ESTADOS.INACTIVO:
+        break;
 
-        case ESTADOS.ENTRANDO:
-        case ESTADOS.ACERCANDO:
-        case ESTADOS.RUTA:
-        case ESTADOS.CAJA:
-            case ESTADOS.PREPARANDO_PAGO: {
+    case ESTADOS.ENTRANDO:
+    case ESTADOS.ACERCANDO:
+    case ESTADOS.RUTA:
+    case ESTADOS.CAJA:
+    case ESTADOS.REGRESANDO: {
 
-    const llegoAlPunto = moverHaciaDestino(delta);
+        const estadoActual = estado;
 
-    if (llegoAlPunto) {
+        const terminado = moverHaciaDestino(delta);
 
-        console.log(
-            `[CLIENTE ${id}] Llegó a la zona de pago móvil.`
-        );
+        if (!terminado) break;
 
-        cambiarEstado(ESTADOS.PAGANDO);
-    }
+        if (estadoActual === ESTADOS.ENTRANDO) {
 
-    break;
-}
-        case ESTADOS.REGRESANDO: {
+            notificarEntrada();
 
-            const estadoActual = estado;
+        } else if (estadoActual === ESTADOS.ACERCANDO) {
 
-            const terminado = moverHaciaDestino(delta);
+            if (productoObjetivo) {
 
-            if (!terminado) break;
+                productoObjetivo.updateMatrixWorld(true);
+                cajaTemporal.setFromObject(productoObjetivo);
 
-            if (estadoActual === ESTADOS.ENTRANDO) {
-                notificarEntrada();
+                if (!cajaTemporal.isEmpty()) {
+                    cajaTemporal.getCenter(vectorTemporal);
+                } else {
+                    productoObjetivo.getWorldPosition(vectorTemporal);
+                }
 
-            } else if (estadoActual === ESTADOS.ACERCANDO) {
+                const dx = vectorTemporal.x - grupo.position.x;
+                const dz = vectorTemporal.z - grupo.position.z;
 
-                if (productoObjetivo) {
+                if (Math.abs(dx) + Math.abs(dz) > 0.0001) {
+                    rotacionObjetivo =
+                        Math.atan2(dx, dz) +
+                        config.correccionRotacion;
 
-                    productoObjetivo.updateMatrixWorld(true);
+                    grupo.rotation.y = rotacionObjetivo;
+                }
 
-                    cajaTemporal.setFromObject(productoObjetivo);
+                grupo.updateMatrixWorld(true);
 
-                    if (!cajaTemporal.isEmpty()) {
-                        cajaTemporal.getCenter(vectorTemporal);
-                    } else {
-                        productoObjetivo.getWorldPosition(vectorTemporal);
-                    }
+                const producto = productoObjetivo;
+                const brazoSeleccionado =
+                    seleccionarBrazoAgarre(producto);
 
-                    const dx = vectorTemporal.x - grupo.position.x;
-                    const dz = vectorTemporal.z - grupo.position.z;
+                productoEsSuperior = esProductoSuperior(producto);
 
-                    if (Math.abs(dx) + Math.abs(dz) > 0.0001) {
-                        rotacionObjetivo =
-                            Math.atan2(dx, dz) +
-                            config.correccionRotacion;
-
-                        grupo.rotation.y = rotacionObjetivo;
-                    }
-
-                    grupo.updateMatrixWorld(true);
-
-                    const producto = productoObjetivo;
-
-                    const brazoSeleccionado =
-                        seleccionarBrazoAgarre(producto);
-
-                    console.log(
-                        `[TRANSICIÓN CLIENTE ${id}]`,
-                        {
-                            producto:
-                                producto.userData?.nombre ??
-                                producto.name,
-
-                            brazoSeleccionado,
-
-                            manoDisponible:
-                                !!obtenerRigBrazo().mano,
-
-                            ladoAgarre,
-
-                            posicionCliente: {
-                                x: Number(grupo.position.x.toFixed(2)),
-                                z: Number(grupo.position.z.toFixed(2))
-                            }
-                        }
-                    );
-productoEsSuperior = esProductoSuperior(producto);
-                    if (
-                        brazoSeleccionado &&
-                        obtenerRigBrazo().mano
-                    ) {
-                        cambiarEstado(ESTADOS.RECOGIENDO);
-
-                    } else {
-
-                        console.warn(
-                            `[CLIENTE ${id}] No pudo seleccionar un brazo para recoger.`,
-                            {
-                                brazoSeleccionado,
-                                manoDisponible:
-                                    !!obtenerRigBrazo().mano
-                            }
-                        );
-
-                        if (producto) {
-                            productosConRutaFallida.add(producto);
-                        }
-
-                        liberarReserva();
-                        cambiarEstado(ESTADOS.BUSCANDO);
-                    }
+                if (
+                    brazoSeleccionado &&
+                    obtenerRigBrazo().mano
+                ) {
+                    cambiarEstado(ESTADOS.RECOGIENDO);
 
                 } else {
 
                     console.warn(
-                        `[CLIENTE ${id}] Llegó al destino sin producto objetivo.`
+                        `[CLIENTE ${id}] No pudo seleccionar un brazo para recoger.`
                     );
 
+                    if (producto) {
+                        productosConRutaFallida.add(producto);
+                    }
+
+                    liberarReserva();
                     cambiarEstado(ESTADOS.BUSCANDO);
                 }
 
-            } else if (estadoActual === ESTADOS.RUTA) {
+            } else {
 
-                if (compras.length >= config.maximoProductos) {
-                    dirigirseACaja();
-                } else {
-                    productosConRutaFallida.clear();
-                    cambiarEstado(ESTADOS.BUSCANDO);
-                }
-
-            } else if (estadoActual === ESTADOS.CAJA) {
-
-                completarPago();
-
-            } else if (estadoActual === ESTADOS.REGRESANDO) {
-
-                finalizarRegreso();
+                cambiarEstado(ESTADOS.BUSCANDO);
             }
 
-            break;
+        } else if (estadoActual === ESTADOS.RUTA) {
+
+            if (compras.length >= config.maximoProductos) {
+                dirigirseACaja();
+            } else {
+                productosConRutaFallida.clear();
+                cambiarEstado(ESTADOS.BUSCANDO);
+            }
+
+        } else if (estadoActual === ESTADOS.CAJA) {
+
+            completarPago();
+
+        } else if (estadoActual === ESTADOS.REGRESANDO) {
+
+            finalizarRegreso();
         }
+
+        break;
+    }
+
+    case ESTADOS.PREPARANDO_PAGO: {
+
+        const llegoAlPunto = moverHaciaDestino(delta);
+
+        if (llegoAlPunto) {
+
+            console.log(
+                `[CLIENTE ${id}] Llegó a la zona de pago móvil.`
+            );
+
+            cambiarEstado(ESTADOS.PAGANDO);
+        }
+
+        break;
+    }
 
         case ESTADOS.BUSCANDO: {
 
@@ -6426,6 +6411,7 @@ case ESTADOS.REGRESANDO_CARRITO: {
             ESTADOS.ACERCANDO,
             ESTADOS.RUTA,
             ESTADOS.CAJA,
+            ESTADOS.PREPARANDO_PAGO,
             ESTADOS.REGRESANDO
         ].includes(estado)
     ) {
