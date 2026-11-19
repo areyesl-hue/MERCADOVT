@@ -669,7 +669,7 @@ function crearTelefonoMovilEnMano() {
             telefono.name = 'TELEFONO_PAGO_MOVIL';
 
             // Ajustar escala del modelo
-            telefono.scale.set(1, 1, 1);
+            telefono.scale.set(1.45, 1.45, 1.45);
 
             // Buscar la pantalla creada en Blender
             let pantallaEncontrada = false;
