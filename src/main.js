@@ -742,6 +742,7 @@ function crearSistemaVehiculos() {
     }
 }
 
+
 function crearClienteParaVehiculo(datos) {
     const idVehiculo = datos?.vehiculo?.id;
 
@@ -776,7 +777,8 @@ function crearClienteParaVehiculo(datos) {
             modelo: config.modelo,
             posicion: posicionInicio,
             mobiliario: mobiliarioSupermercado,
-            colisiones: mobiliarioSupermercado?.userData?.obtenerColisiones?.() ?? [],
+            colisiones:
+                mobiliarioSupermercado?.userData?.obtenerColisiones?.() ?? [],
             velocidad: CONFIG.velocidadCliente,
             escala: 1,
             ruta: config.ruta,
@@ -788,6 +790,7 @@ function crearClienteParaVehiculo(datos) {
             maximoProductos: CONFIG.maximoProductosCliente,
             radioColision: 0.42,
 
+            // Cuando el cliente compra productos
             alComprar: ({ totalProductos } = {}) => {
                 const visita = visitantesPorVehiculo.get(idVehiculo);
 
@@ -796,10 +799,11 @@ function crearClienteParaVehiculo(datos) {
                 visita.tiempo = 0;
 
                 console.info(
-                    `[VISITANTE] ${visita.nombreCliente} lleva ${totalProductos} producto(s); se reinicia su tiempo de compra.`
+                    `[VISITANTE] ${visita.nombreCliente} lleva ${totalProductos} producto(s).`
                 );
             },
 
+            // Cuando entra al supermercado
             alEntrar: () => {
                 const visita = visitantesPorVehiculo.get(idVehiculo);
 
@@ -825,11 +829,39 @@ function crearClienteParaVehiculo(datos) {
                 mostrarMensaje(
                     `${visita.nombreCliente} entró al supermercado.`
                 );
+            },
+
+            // Detectar cuando llega a la zona de pago
+            alCambiarEstado: ({ estado } = {}) => {
+                const visita = visitantesPorVehiculo.get(idVehiculo);
+
+                if (!visita) return;
+
+                if (
+                    estado === 'PAGANDO' &&
+                    visita.ticketPendiente &&
+                    !visita.pagoMostrado
+                ) {
+                    visita.pagoMostrado = true;
+                    visita.fase = 'pagoMovil';
+
+                    mostrarMensaje(
+                        `${visita.nombreCliente} está mostrando su código QR.`
+                    );
+
+                    mostrarPagoMovil(
+                        visita,
+                        visita.ticketPendiente
+                    );
+                }
             }
         });
 
         if (!cliente) {
-            console.error(`No se pudo crear el visitante ${idVehiculo}.`);
+            console.error(
+                `No se pudo crear el visitante ${idVehiculo}.`
+            );
+
             sistemaVehiculos?.solicitarSalida?.(idVehiculo);
             return;
         }
@@ -842,15 +874,22 @@ function crearClienteParaVehiculo(datos) {
             cliente,
             carrito: null,
             nombreCliente: config.nombre,
+
             plaza: {
                 id: datos.plaza.id,
                 x: datos.plaza.x,
                 z: datos.plaza.z
             },
+
             fase: 'entrando',
             tiempo: 0,
             tiempoEsperaCaja: 0,
+
             pagoSolicitado: false,
+            pagoMostrado: false,
+
+            ticketPendiente: null,
+
             salidaSolicitada: false,
             intentosSalida: 0,
             cajaAsignada: null
@@ -860,7 +899,10 @@ function crearClienteParaVehiculo(datos) {
         clientesSupermercado.push(cliente);
 
         if (typeof cliente.iniciarDesdeVehiculo !== 'function') {
-            console.error('El cliente no tiene iniciarDesdeVehiculo().');
+            console.error(
+                'El cliente no tiene iniciarDesdeVehiculo().'
+            );
+
             visita.fase = 'errorEntrada';
             solicitarSalidaVisitante(visita);
             return;
@@ -872,15 +914,24 @@ function crearClienteParaVehiculo(datos) {
         );
 
         if (iniciado === false) {
-            console.error(`No se pudo iniciar el visitante ${idVehiculo}.`);
+            console.error(
+                `No se pudo iniciar el visitante ${idVehiculo}.`
+            );
+
             visita.fase = 'errorEntrada';
             solicitarSalidaVisitante(visita);
             return;
         }
 
-        console.info(`[VISITANTE] ${idVehiculo} comenzó a caminar.`);
+        console.info(
+            `[VISITANTE] ${idVehiculo} comenzó a caminar.`
+        );
+
     } catch (error) {
-        console.error('Error al crear visitante:', error);
+        console.error(
+            'Error al crear visitante:',
+            error
+        );
 
         cliente?.eliminar?.();
         limpiarVisitaVehiculo(idVehiculo);
@@ -888,6 +939,7 @@ function crearClienteParaVehiculo(datos) {
         sistemaVehiculos?.solicitarSalida?.(idVehiculo);
     }
 }
+
 
 function crearCarritoVisitante(cliente, idVisita) {
     const grupoCliente = cliente?.grupo;
@@ -1209,6 +1261,7 @@ function actualizarFasesVisitantes(delta) {
 }
 
 
+
 function iniciarPagoVisitante(visita) {
     if (!visita || visita.pagoSolicitado) return;
 
@@ -1217,15 +1270,16 @@ function iniciarPagoVisitante(visita) {
     if (!cliente || typeof cliente.iniciarPagoMovil !== 'function') {
         visita.fase = 'errorPago';
         visita.pagoSolicitado = false;
-        console.error('El cliente no tiene iniciarPagoMovil().');
+        console.error('[PAGO MOVIL] El cliente no tiene iniciarPagoMovil().');
         return;
     }
 
-    visita.fase = 'pagoMovil';
+    visita.fase = 'preparandoPago';
     visita.pagoSolicitado = true;
+    visita.pagoMostrado = false;
 
     mostrarMensaje(
-        `${visita.nombreCliente} está pagando desde su celular.`
+        `${visita.nombreCliente} se dirige a la zona de pago móvil.`
     );
 
     try {
@@ -1238,19 +1292,22 @@ function iniciarPagoVisitante(visita) {
         if (!ticket) {
             visita.fase = 'errorPago';
             visita.pagoSolicitado = false;
-            console.error('No se pudo generar el ticket móvil.');
+            console.error('[PAGO MOVIL] No se pudo generar el ticket.');
             return;
         }
 
         visita.ticketPendiente = ticket;
-        mostrarPagoMovil(visita, ticket);
+
+        // El QR todavía no se muestra.
+        // Esperamos a que el cliente llegue al estado PAGANDO.
 
     } catch (error) {
         visita.fase = 'errorPago';
         visita.pagoSolicitado = false;
-        console.error('Error al iniciar el pago móvil:', error);
+        console.error('[PAGO MOVIL] Error:', error);
     }
 }
+
 
 
 
@@ -2170,7 +2227,9 @@ function crearInterfazPagoMovil() {
     document.body.appendChild(ventana);
 }
 
+
 function mostrarPagoMovil(visita, ticket) {
+
     if (!visita || !ticket) return;
 
     crearInterfazPagoMovil();
@@ -2182,12 +2241,19 @@ function mostrarPagoMovil(visita, ticket) {
     const contenedorQR = document.getElementById('qr-pago');
     const boton = document.getElementById('btn-confirmar-pago');
 
-    if (!ventana || !folio || !total || !estadoPago || !contenedorQR || !boton) {
+    if (
+        !ventana ||
+        !folio ||
+        !total ||
+        !estadoPago ||
+        !contenedorQR ||
+        !boton
+    ) {
         console.error('[PAGO MOVIL] No se encontró la interfaz.');
         return;
     }
 
-    // Información que podrá leer la aplicación móvil
+    // Datos que contendrá el QR
     const datosQR = {
         tipo: 'PAGO_SUPERMERCADO',
         folio: ticket.folio,
@@ -2197,22 +2263,34 @@ function mostrarPagoMovil(visita, ticket) {
         total: ticket.total
     };
 
-    if (typeof visita.cliente.actualizarQRTelefono === 'function') {
-    visita.cliente.actualizarQRTelefono(datosQR);
-}
+    // Actualizar la pantalla del celular 3D
+    if (
+        typeof visita.cliente.actualizarQRTelefono === 'function'
+    ) {
+        visita.cliente.actualizarQRTelefono(datosQR);
+    } else {
+        console.warn(
+            '[PAGO MOVIL] Falta actualizarQRTelefono() en cliente.js.'
+        );
+    }
 
     folio.textContent = `Folio: ${ticket.folio}`;
     total.textContent = formatoMoneda(ticket.total);
-    estadoPago.textContent = 'Escanea el QR y confirma el pago simulado.';
+
+    estadoPago.textContent =
+        'Escanea el QR y confirma el pago simulado.';
 
     contenedorQR.replaceChildren();
 
     if (typeof window.QRCode === 'undefined') {
-        estadoPago.textContent = 'No se pudo cargar el generador QR. Revisa tu conexión.';
+        estadoPago.textContent =
+            'No se pudo cargar el generador QR. Revisa tu conexión.';
+
         console.error('[PAGO MOVIL] QRCode no está disponible.');
         return;
     }
 
+    // Generar el código QR
     new window.QRCode(contenedorQR, {
         text: JSON.stringify(datosQR),
         width: 190,
@@ -2225,29 +2303,46 @@ function mostrarPagoMovil(visita, ticket) {
     boton.disabled = false;
     boton.textContent = 'Confirmar pago simulado';
 
-    // El botón siempre actúa sobre el visitante que tiene esta ventana abierta
+    // Evitar registrar dos veces el mismo evento
     boton.onclick = () => {
+
         const cliente = visita.cliente;
 
-        if (!cliente || typeof cliente.confirmarPagoMovil !== 'function') {
-            console.error('[PAGO MOVIL] El cliente no tiene confirmarPagoMovil().');
+        if (
+            !cliente ||
+            typeof cliente.confirmarPagoMovil !== 'function'
+        ) {
+            console.error(
+                '[PAGO MOVIL] No existe confirmarPagoMovil().'
+            );
             return;
         }
 
         boton.disabled = true;
+
         estadoPago.textContent = 'Confirmando pago...';
 
-        const confirmado = cliente.confirmarPagoMovil(ticket.folio);
+        const confirmado = cliente.confirmarPagoMovil(
+            ticket.folio
+        );
 
         if (confirmado) {
-            estadoPago.textContent = '¡Pago confirmado correctamente!';
+
+            estadoPago.textContent =
+                '¡Pago confirmado correctamente!';
+
             ventana.style.display = 'none';
+
         } else {
+
             boton.disabled = false;
-            estadoPago.textContent = 'No se pudo confirmar. Intenta nuevamente.';
+
+            estadoPago.textContent =
+                'No se pudo confirmar. Intenta nuevamente.';
         }
     };
 }
+
 
 function crearInterfazCamaras() {
     const panel = document.createElement('div');
