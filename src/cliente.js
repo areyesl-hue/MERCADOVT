@@ -698,7 +698,7 @@ function crearTelefonoMovilEnMano() {
             // Sujetar a la mano derecha
             rig.manoDerecha.add(telefono);
 
-            telefono.visible = false;
+            telefono.visible = estado === ESTADOS.PAGANDO;
 
             telefonoMovil = telefono;
 
@@ -2708,94 +2708,81 @@ function animarGuardarProcedural() {
 
     
     
-    
+ function animarPagarProcedural() {
 
-    function animarPagarProcedural() {
-        const duracion = Math.max(
-            numero(config.tiempoPago, 3.0),
-            0.1
-        );
-        const progreso = limitar(tiempoEstado / duracion, 0, 1);
-        const extender = suavizar(limitar(progreso / 0.30, 0, 1));
-        const retirar = suavizar(limitar((progreso - 0.78) / 0.22, 0, 1));
-        const alcance = extender * (1 - retirar);
-        const prepararTarjeta =
-            suavizar(limitar(progreso / 0.18, 0, 1)) *
-            (1 - retirar);
-        const pausa = suavizar(
-            limitar((progreso - 0.44) / 0.12, 0, 1)
-        ) * (1 - retirar);
+    // Tiempo para levantar el celular
+    const duracionSubida = 1.0;
 
-        const toqueUno = Math.exp(
-            -Math.pow((progreso - 0.34) / 0.025, 2)
-        );
-        const toqueDos = Math.exp(
-            -Math.pow((progreso - 0.41) / 0.025, 2)
-        );
-        const toque = (toqueUno + toqueDos) * alcance;
-        const respiracion = Math.sin(tiempoEstado * 2.1) * 0.012;
-        const cambioPeso = Math.sin(tiempoEstado * 1.35) * 0.018;
-        const asentir = Math.sin(tiempoEstado * 4.2) * pausa * 0.025;
+    const progreso = suavizar(
+        limitar(tiempoEstado / duracionSubida, 0, 1)
+    );
 
-        aplicarRotacionEuler(
-            rig.brazoDerecho,
-            -0.78 * alcance + 0.03 * toque,
-            -0.10 * alcance,
-            0.08 * alcance
-        );
-        aplicarRotacionEuler(
-            rig.antebrazoDerecho,
-            -0.48 * alcance - 0.035 * toque,
-            -0.08 * alcance,
-            -0.06
-        );
-        aplicarRotacionEuler(
-            rig.manoDerecha,
-            -0.12 * alcance + 0.12 * toque,
-            0.05 * alcance,
-            0.08 * alcance
-        );
+    // Pequeño movimiento natural mientras observa el celular
+    const respiracion = Math.sin(tiempoEstado * 2.0) * 0.012;
+    const movimientoMano = Math.sin(tiempoEstado * 1.8) * 0.012;
 
-        aplicarRotacionEuler(
-            rig.brazoIzquierdo,
-            -0.38 * prepararTarjeta,
-            0.12 * prepararTarjeta,
-            -0.10 * prepararTarjeta
-        );
-        aplicarRotacionEuler(
-            rig.antebrazoIzquierdo,
-            -0.62 * prepararTarjeta,
-            0.08 * prepararTarjeta,
-            0.05
-        );
-        aplicarRotacion(
-            rig.manoIzquierda,
-            EJE_X,
-            -0.16 * prepararTarjeta + toque * 0.04
-        );
+    // Brazo derecho: levanta el celular
+    aplicarRotacionEuler(
+        rig.brazoDerecho,
+        -0.95 * progreso,
+        -0.10 * progreso,
+        0.10 * progreso
+    );
 
-        aplicarRotacionEuler(
-            rig.cabeza,
-            0.08 + 0.06 * alcance + asentir,
-            -0.08 * alcance,
-            Math.sin(tiempoEstado * 1.1) * 0.025
-        );
-        aplicarRotacion(rig.cuello, EJE_X, 0.04 + respiracion);
-        aplicarRotacionEuler(
-            rig.torso,
-            0.045 * alcance + respiracion * 0.7,
-            0,
-            cambioPeso * alcance
-        );
-        aplicarRotacionEuler(
-            rig.cadera,
-            -0.015 * alcance + respiracion * 0.3,
-            0,
-            -cambioPeso * alcance
-        );
-    }
+    // Antebrazo derecho
+    aplicarRotacionEuler(
+        rig.antebrazoDerecho,
+        -0.75 * progreso,
+        -0.08 * progreso,
+        -0.05
+    );
 
-    
+    // Mano derecha
+    aplicarRotacionEuler(
+        rig.manoDerecha,
+        -0.15 * progreso + movimientoMano,
+        0.05 * progreso,
+        0.08 * progreso
+    );
+
+    // Brazo izquierdo: postura natural de apoyo
+    aplicarRotacionEuler(
+        rig.brazoIzquierdo,
+        -0.20 * progreso,
+        0.08 * progreso,
+        -0.05 * progreso
+    );
+
+    aplicarRotacionEuler(
+        rig.antebrazoIzquierdo,
+        -0.30 * progreso,
+        0.05 * progreso,
+        0
+    );
+
+    // Cabeza mirando hacia el celular
+    aplicarRotacionEuler(
+        rig.cabeza,
+        0.18 * progreso + respiracion,
+        -0.06 * progreso,
+        0
+    );
+
+    // Torso ligeramente inclinado
+    aplicarRotacionEuler(
+        rig.torso,
+        0.06 * progreso + respiracion,
+        0,
+        0
+    );
+
+    aplicarRotacionEuler(
+        rig.cadera,
+        -0.015 * progreso,
+        0,
+        0
+    );
+}
     
     
 
@@ -6325,52 +6312,13 @@ case ESTADOS.REGRESANDO_CARRITO: {
 
         case ESTADOS.PAGANDO: {
 
-            animarPagarProcedural();
+    animarPagarProcedural();
 
-            if (
-                tiempoEstado >=
-                Math.max(numero(config.tiempoPago, 3.0), 0.1)
-            ) {
+    // El cliente permanece sosteniendo el celular.
+    // No termina hasta recibir confirmación del pago.
 
-                const ticket = ticketPendiente;
-
-                ticketPendiente = null;
-
-                if (config.repetirRuta) {
-
-                    compras = [];
-
-                    productosExaminados.clear();
-                    productosConRutaFallida.clear();
-                    racksVisitados.clear();
-
-                    cambiarEstado(ESTADOS.BUSCANDO);
-
-                } else {
-
-                    const callback = callbackPagoPendiente;
-
-                    callbackPagoPendiente = null;
-
-                    if (typeof callback === 'function') {
-                        try {
-                            callback(ticket);
-                        } catch (error) {
-                            console.error(
-                                `[CLIENTE ${id}] Error en callback de pago:`,
-                                error
-                            );
-                        }
-                    }
-
-                    if (estado === ESTADOS.PAGANDO) {
-                        cambiarEstado(ESTADOS.FINALIZADO);
-                    }
-                }
-            }
-
-            break;
-        }
+    break;
+}
 
         case ESTADOS.FINALIZADO:
             break;
