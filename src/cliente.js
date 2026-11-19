@@ -698,7 +698,7 @@ function crearTelefonoMovilEnMano() {
             }
 
  // Prueba de posición y orientación
-telefono.position.set(0, 0.06, 0.08);
+telefono.position.set(0, 0.012, 0.08);
 telefono.rotation.set(0, Math.PI, 0);
 
 rig.manoDerecha.add(telefono);
@@ -6707,3 +6707,4 @@ case ESTADOS.REGRESANDO_CARRITO: {
 
     return api;
 }
+
