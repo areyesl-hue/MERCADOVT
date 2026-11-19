@@ -11,10 +11,6 @@ import { crearVehiculos } from './vehiculos.js';
 import { crearEstacionamiento } from './estacionamiento.js';
 import { crearLadron } from './ladron.js';
 
-// ============================================================
-// CONFIGURACIÓN GENERAL
-// ============================================================
-
 const CONFIG = {
     alturaJugador: 1.7,
     velocidadCaminar: 7,
@@ -56,10 +52,6 @@ const INTERVALO_HUD = 0.25;
 const INTERVALO_REINTENTO_CAJA = 1;
 
 let acumuladorHUD = 0;
-
-// ============================================================
-// CONFIGURACIÓN DE CLIENTES
-// ============================================================
 
 const CONFIG_CLIENTES = [
     {
@@ -170,10 +162,6 @@ const CONFIG_CLIENTES = [
     }
 ];
 
-// ============================================================
-// CONFIGURACIÓN DE LADRONES
-// ============================================================
-
 const CONFIG_LADRONES = [
     {
         id: 'Ladron1',
@@ -200,10 +188,6 @@ const MAXIMO_INTERVALO_LADRONES = 70;
 
 let temporizadorLadrones = INTERVALO_LADRONES;
 let indiceSiguienteLadron = 0;
-
-// ============================================================
-// 30 CÁMARAS DE SEGURIDAD
-// ============================================================
 
 const CONFIG_CAMARAS = [
     {
@@ -388,10 +372,6 @@ const CONFIG_CAMARAS = [
     }
 ];
 
-// ============================================================
-// VARIABLES GLOBALES
-// ============================================================
-
 let escena;
 let camara;
 let renderizador;
@@ -441,10 +421,6 @@ const vectorDerecha = new THREE.Vector3();
 const movimientoJugador = new THREE.Vector3();
 const ejeVertical = new THREE.Vector3(0, 1, 0);
 
-// ============================================================
-// INICIO
-// ============================================================
-
 iniciar();
 
 function iniciar() {
@@ -473,10 +449,6 @@ function iniciar() {
     console.info(`Cámaras: ${CONFIG_CAMARAS.length}`);
     console.info(`Cajas: ${CONFIG.cajasRegistradoras.length}`);
 }
-
-// ============================================================
-// ESCENA
-// ============================================================
 
 function crearEscena() {
     escena = new THREE.Scene();
@@ -522,10 +494,6 @@ function crearRenderizador() {
     document.body.appendChild(renderizador.domElement);
 }
 
-// ============================================================
-// ILUMINACIÓN PERMANENTE DE DÍA
-// ============================================================
-
 function crearIluminacion() {
     luzAmbiente = new THREE.HemisphereLight(
         0xe8f3ff,
@@ -541,10 +509,6 @@ function crearIluminacion() {
 
     escena.add(luzSol);
 }
-
-// ============================================================
-// OPTIMIZAR SOMBRAS
-// ============================================================
 
 function optimizarSombrasEscena() {
     if (!escena) return;
@@ -562,10 +526,6 @@ function optimizarSombrasEscena() {
 
     console.info('[RENDIMIENTO] Sombras desactivadas.');
 }
-
-// ============================================================
-// ESTRUCTURA DEL SUPERMERCADO
-// ============================================================
 
 function crearEstructuraSupermercado() {
     try {
@@ -606,10 +566,6 @@ function crearEstructuraSupermercado() {
     optimizarSombrasEscena();
 }
 
-// ============================================================
-// CONTROLES
-// ============================================================
-
 function limpiarTeclas() {
     for (const tecla of Object.keys(teclas)) {
         teclas[tecla] = false;
@@ -631,10 +587,6 @@ function crearControles() {
         }
     });
 }
-
-// ============================================================
-// LADRONES
-// ============================================================
 
 function crearLadrones() {
     if (!productosLacteos) {
@@ -740,10 +692,6 @@ function actualizarGeneradorLadrones(delta) {
     }
 }
 
-// ============================================================
-// VEHÍCULOS
-// ============================================================
-
 function crearSistemaVehiculos() {
     try {
         sistemaVehiculos = crearVehiculos(escena, {
@@ -793,10 +741,6 @@ function crearSistemaVehiculos() {
         console.error('[VEHÍCULOS] Error:', error);
     }
 }
-
-// ============================================================
-// CREAR VISITANTE AL ESTACIONARSE
-// ============================================================
 
 function crearClienteParaVehiculo(datos) {
     const idVehiculo = datos?.vehiculo?.id;
@@ -945,10 +889,6 @@ function crearClienteParaVehiculo(datos) {
     }
 }
 
-// ============================================================
-// CREAR CARRITO AL ENTRAR
-// ============================================================
-
 function crearCarritoVisitante(cliente, idVisita) {
     const grupoCliente = cliente?.grupo;
 
@@ -995,9 +935,6 @@ function crearCarritoVisitante(cliente, idVisita) {
     }
 }
 
-// ============================================================
-// RETIRAR CLIENTE Y CARRITO
-// ============================================================
 
 function retirarClienteYCarritoDeVisita(visita) {
     if (!visita) return;
@@ -1035,10 +972,6 @@ function retirarClienteYCarritoDeVisita(visita) {
     console.info(`[VISITANTE] ${visita.nombreCliente}: retirado.`);
 }
 
-// ============================================================
-// LIMPIAR VISITA
-// ============================================================
-
 function limpiarVisitaVehiculo(idVehiculo) {
     const visita = visitantesPorVehiculo.get(idVehiculo);
 
@@ -1069,10 +1002,6 @@ function limpiarVisitaVehiculo(idVehiculo) {
 
     console.info(`[VISITANTE] Visita ${idVehiculo} eliminada.`);
 }
-
-// ============================================================
-// RESERVACIÓN DE CAJAS
-// ============================================================
 
 function obtenerCajaDisponible() {
     return CONFIG.cajasRegistradoras.find(
@@ -1109,10 +1038,6 @@ function liberarCajaVisitante(visita) {
 
     visita.cajaAsignada = null;
 }
-
-// ============================================================
-// ACTUALIZAR ENTIDADES
-// ============================================================
 
 function actualizarEntidades(delta) {
     actualizarLista(clientesSupermercado, delta);
@@ -1161,9 +1086,6 @@ function actualizarLista(lista, delta) {
     }
 }
 
-// ============================================================
-// ESTADO DE CLIENTES
-// ============================================================
 
 function obtenerEstadoCliente(cliente) {
     return String(cliente?.estado ?? '').toLowerCase();
@@ -1213,9 +1135,6 @@ function obtenerComprasCliente(cliente) {
     return [];
 }
 
-// ============================================================
-// CICLO DE VISITANTES
-// ============================================================
 
 function actualizarFasesVisitantes(delta) {
     for (const visita of visitantesPorVehiculo.values()) {
@@ -1289,98 +1208,87 @@ function actualizarFasesVisitantes(delta) {
     }
 }
 
-// ============================================================
-// PAGO
-// ============================================================
 
 function iniciarPagoVisitante(visita) {
-    if (!visita) return;
+    if (!visita || visita.pagoSolicitado) return;
 
     const cliente = visita.cliente;
 
-    if (!cliente || typeof cliente.iniciarPago !== 'function') {
+    if (!cliente || typeof cliente.iniciarPagoMovil !== 'function') {
         visita.fase = 'errorPago';
         visita.pagoSolicitado = false;
-
-        console.error('El cliente no tiene iniciarPago().');
-
+        console.error('El cliente no tiene iniciarPagoMovil().');
         return;
     }
 
-    const caja = reservarCaja(visita);
-
-    if (!caja) {
-        visita.fase = 'esperandoCaja';
-        visita.pagoSolicitado = false;
-        visita.tiempoEsperaCaja = 0;
-
-        mostrarMensaje(
-            `${visita.nombreCliente} está esperando una caja libre.`
-        );
-
-        return;
-    }
-
-    visita.fase = 'caja';
+    visita.fase = 'pagoMovil';
     visita.pagoSolicitado = true;
 
     mostrarMensaje(
-        `${visita.nombreCliente} se dirige a la caja ${caja.id}.`
+        `${visita.nombreCliente} está pagando desde su celular.`
     );
 
     try {
-        const iniciado = cliente.iniciarPago(
-            { x: caja.x, z: caja.z },
-            ticket => {
-                liberarCajaVisitante(visita);
-                finalizarPagoVisitante(visita, ticket);
+        const ticket = cliente.iniciarPagoMovil(
+            ticketGenerado => {
+                finalizarPagoVisitante(visita, ticketGenerado);
             }
         );
 
-        if (iniciado === false) {
-            liberarCajaVisitante(visita);
-
+        if (!ticket) {
             visita.fase = 'errorPago';
             visita.pagoSolicitado = false;
-
-            mostrarMensaje('No se pudo iniciar el recorrido a caja.');
+            console.error('No se pudo generar el ticket móvil.');
+            return;
         }
-    } catch (error) {
-        liberarCajaVisitante(visita);
 
+        visita.ticketPendiente = ticket;
+        mostrarPagoMovil(visita, ticket);
+
+    } catch (error) {
         visita.fase = 'errorPago';
         visita.pagoSolicitado = false;
-
-        console.error('Error al iniciar pago:', error);
+        console.error('Error al iniciar el pago móvil:', error);
     }
 }
 
-// ============================================================
-// FINALIZAR PAGO Y REGRESAR AL VEHÍCULO
-// ============================================================
+
+
 
 function finalizarPagoVisitante(visita, ticket) {
-    if (!visita || visita.fase !== 'caja') return;
 
-    if (ticket) {
-        const ticketGuardado = {
-            ...ticket,
-            nombreCliente: visita.nombreCliente ?? 'Cliente',
-            fecha: ticket.fecha ?? new Date().toLocaleString('es-MX')
-        };
+    if (!visita || visita.fase !== 'pagoMovil') return;
 
-        ticketsGenerados.push(ticketGuardado);
-
-        mostrarTicket(
-            ticketGuardado,
-            visita.nombreCliente ?? 'Cliente'
-        );
-
-        actualizarHUD();
+    if (!ticket || ticket.pagado !== true) {
+        console.warn('[PAGO MOVIL] El ticket todavía no está pagado.');
+        return;
     }
+
+    const ticketGuardado = {
+        ...ticket,
+        nombreCliente: visita.nombreCliente ?? 'Cliente',
+        fecha: ticket.fecha ?? new Date().toLocaleString('es-MX')
+    };
+
+    ticketsGenerados.push(ticketGuardado);
+
+    visita.fase = 'pagoConfirmado';
+    visita.ticketPendiente = null;
+
+    mostrarTicket(
+        ticketGuardado,
+        visita.nombreCliente ?? 'Cliente'
+    );
+
+    actualizarHUD();
+
+    mostrarMensaje(
+        `${visita.nombreCliente} ha confirmado su pago móvil.`
+    );
 
     iniciarRegresoVisitante(visita);
 }
+
 
 function iniciarRegresoVisitante(visita) {
     if (!visita) return;
@@ -1429,9 +1337,6 @@ function iniciarRegresoVisitante(visita) {
     }
 }
 
-// ============================================================
-// SOLICITAR SALIDA DEL VEHÍCULO
-// ============================================================
 
 function solicitarSalidaVisitante(visita) {
     if (!visita || visita.salidaSolicitada) return false;
@@ -1461,10 +1366,6 @@ function solicitarSalidaVisitante(visita) {
 
     return false;
 }
-
-// ============================================================
-// MOVIMIENTO DEL JUGADOR
-// ============================================================
 
 function actualizarJugador(delta) {
     if (
@@ -1546,9 +1447,6 @@ function actualizarJugador(delta) {
     registrarTrayectoria(camara.position);
 }
 
-// ============================================================
-// REGISTRO DEL RECORRIDO
-// ============================================================
 
 function registrarTrayectoria(posicion) {
     const ultimaPosicion = trayectoriaJugador.length
@@ -1575,10 +1473,6 @@ function registrarTrayectoria(posicion) {
         trayectoriaJugador.shift();
     }
 }
-
-// ============================================================
-// TICKETS: FUNCIONES DE DATOS
-// ============================================================
 
 function obtenerArticulosTicket(ticket) {
     if (Array.isArray(ticket?.articulos)) return ticket.articulos;
@@ -1628,9 +1522,6 @@ function formatoMoneda(valor) {
     });
 }
 
-// ============================================================
-// EXPORTAR TODOS LOS TICKETS A PDF
-// ============================================================
 
 function exportarTickets() {
     if (!ticketsGenerados.length) {
@@ -2112,10 +2003,6 @@ function exportarTickets() {
     );
 }
 
-// ============================================================
-// MOSTRAR TICKET INDIVIDUAL
-// ============================================================
-
 function mostrarTicket(ticket, nombreCliente = 'Cliente') {
     const ventana = document.getElementById('ticket-supermercado');
 
@@ -2127,12 +2014,14 @@ function mostrarTicket(ticket, nombreCliente = 'Cliente') {
 
     if (!datos || !articulos || !totalElemento) return;
 
-    const lista = obtenerArticulosTicket(ticket);
+    const lista = ticket.productos?.length
+    ? ticket.productos
+    : obtenerArticulosTicket(ticket);
 
     datos.replaceChildren();
 
     const informacionTicket = [
-        ['Folio', ticket.idTicket ?? 'SIN FOLIO'],
+        ['Folio', ticket.idTicket ?? ticket.folio ?? 'SIN FOLIO'],
         ['Cliente', ticket.nombreCliente ?? ticket.idCliente ?? nombreCliente],
         ['Fecha', ticket.fecha ?? new Date().toLocaleString('es-MX')]
     ];
@@ -2188,12 +2077,177 @@ function mostrarTicket(ticket, nombreCliente = 'Cliente') {
 
     totalElemento.textContent = formatoMoneda(total);
 
+    // Preparar espacio para el QR del pago móvil
+let qrContenedor = document.getElementById('ticket-qr');
+
+if (!qrContenedor) {
+    qrContenedor = document.createElement('div');
+    qrContenedor.id = 'ticket-qr';
+
+    qrContenedor.style.cssText = `
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin: 18px auto;
+        padding: 15px;
+        background: white;
+        border-radius: 12px;
+        color: #111;
+    `;
+
+    const imagenQR = document.createElement('img');
+    imagenQR.id = 'imagen-qr-pago';
+    imagenQR.width = 180;
+    imagenQR.height = 180;
+    imagenQR.alt = 'Código QR de pago';
+
+    const textoQR = document.createElement('strong');
+    textoQR.id = 'texto-qr-pago';
+    textoQR.textContent = 'Escanea para consultar el pago';
+
+    qrContenedor.append(imagenQR, textoQR);
+    totalElemento.parentElement.append(qrContenedor);
+}
     ventana.style.display = 'flex';
 }
 
-// ============================================================
-// CÁMARAS DE SEGURIDAD
-// ============================================================
+
+function crearInterfazPagoMovil() {
+    if (document.getElementById('ventana-pago-movil')) return;
+
+    const ventana = document.createElement('div');
+    ventana.id = 'ventana-pago-movil';
+
+    ventana.style.cssText = `
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0,0,0,0.8);
+        font-family: Arial, sans-serif;
+    `;
+
+    ventana.innerHTML = `
+        <div style="
+            background: white;
+            color: #17202a;
+            padding: 25px;
+            border-radius: 18px;
+            width: 320px;
+            text-align: center;
+        ">
+            <h2>Pago móvil</h2>
+            <p id="pago-folio"></p>
+
+            <div id="qr-pago" style="
+                display: flex;
+                justify-content: center;
+                margin: 20px 0;
+            "></div>
+
+            <h2 id="pago-total">$0.00</h2>
+
+            <p id="pago-estado">
+                Esperando confirmación...
+            </p>
+
+            <button id="btn-confirmar-pago" style="
+                padding: 12px 20px;
+                background: #16834a;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+            ">
+                Confirmar pago simulado
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(ventana);
+}
+
+function mostrarPagoMovil(visita, ticket) {
+    if (!visita || !ticket) return;
+
+    crearInterfazPagoMovil();
+
+    const ventana = document.getElementById('ventana-pago-movil');
+    const folio = document.getElementById('pago-folio');
+    const total = document.getElementById('pago-total');
+    const estadoPago = document.getElementById('pago-estado');
+    const contenedorQR = document.getElementById('qr-pago');
+    const boton = document.getElementById('btn-confirmar-pago');
+
+    if (!ventana || !folio || !total || !estadoPago || !contenedorQR || !boton) {
+        console.error('[PAGO MOVIL] No se encontró la interfaz.');
+        return;
+    }
+
+    // Información que podrá leer la aplicación móvil
+    const datosQR = {
+        tipo: 'PAGO_SUPERMERCADO',
+        folio: ticket.folio,
+        idCliente: ticket.idCliente,
+        fecha: ticket.fecha,
+        productos: ticket.productos,
+        total: ticket.total
+    };
+
+    if (typeof visita.cliente.actualizarQRTelefono === 'function') {
+    visita.cliente.actualizarQRTelefono(datosQR);
+}
+
+    folio.textContent = `Folio: ${ticket.folio}`;
+    total.textContent = formatoMoneda(ticket.total);
+    estadoPago.textContent = 'Escanea el QR y confirma el pago simulado.';
+
+    contenedorQR.replaceChildren();
+
+    if (typeof window.QRCode === 'undefined') {
+        estadoPago.textContent = 'No se pudo cargar el generador QR. Revisa tu conexión.';
+        console.error('[PAGO MOVIL] QRCode no está disponible.');
+        return;
+    }
+
+    new window.QRCode(contenedorQR, {
+        text: JSON.stringify(datosQR),
+        width: 190,
+        height: 190,
+        correctLevel: window.QRCode.CorrectLevel.M
+    });
+
+    ventana.style.display = 'flex';
+
+    boton.disabled = false;
+    boton.textContent = 'Confirmar pago simulado';
+
+    // El botón siempre actúa sobre el visitante que tiene esta ventana abierta
+    boton.onclick = () => {
+        const cliente = visita.cliente;
+
+        if (!cliente || typeof cliente.confirmarPagoMovil !== 'function') {
+            console.error('[PAGO MOVIL] El cliente no tiene confirmarPagoMovil().');
+            return;
+        }
+
+        boton.disabled = true;
+        estadoPago.textContent = 'Confirmando pago...';
+
+        const confirmado = cliente.confirmarPagoMovil(ticket.folio);
+
+        if (confirmado) {
+            estadoPago.textContent = '¡Pago confirmado correctamente!';
+            ventana.style.display = 'none';
+        } else {
+            boton.disabled = false;
+            estadoPago.textContent = 'No se pudo confirmar. Intenta nuevamente.';
+        }
+    };
+}
 
 function crearInterfazCamaras() {
     const panel = document.createElement('div');
@@ -2331,10 +2385,6 @@ function actualizarEstadoVista() {
         elemento.textContent = `Vista: ${config.nombre}`;
     }
 }
-
-// ============================================================
-// INTERFAZ
-// ============================================================
 
 function crearInterfaz() {
     const estilos = document.createElement('style');
@@ -2701,8 +2751,6 @@ function crearInterfaz() {
 
     document.head.appendChild(estilos);
 
-    // PORTADA
-
     const portada = document.createElement('div');
 
     portada.id = 'portada-supermercado';
@@ -2720,7 +2768,7 @@ function crearInterfaz() {
 
     document.body.appendChild(portada);
 
-    // HUD
+ 
 
     const hud = document.createElement('div');
 
@@ -2752,8 +2800,6 @@ function crearInterfaz() {
 
     document.body.appendChild(hud);
 
-    // ACCIONES
-
     const acciones = document.createElement('div');
 
     acciones.id = 'acciones-supermercado';
@@ -2766,8 +2812,6 @@ function crearInterfaz() {
 
     document.body.appendChild(acciones);
 
-    // MENSAJES
-
     const mensaje = document.createElement('div');
 
     mensaje.id = 'mensaje-supermercado';
@@ -2775,7 +2819,6 @@ function crearInterfaz() {
 
     document.body.appendChild(mensaje);
 
-    // VENTANA DE TICKETS
 
     const ticket = document.createElement('div');
 
@@ -2820,8 +2863,6 @@ function crearInterfaz() {
 
     crearInterfazCamaras();
 
-    // EVENTO ENTRAR
-
     document.getElementById('btn-entrar').onclick = () => {
         juegoIniciado = true;
 
@@ -2830,27 +2871,18 @@ function crearInterfaz() {
         controles.lock();
     };
 
-    // EXPORTAR TICKETS PDF
 
     document.getElementById('btn-tickets').onclick =
         exportarTickets;
-
-    // CERRAR TICKET
 
     document.getElementById('ticket-cerrar').onclick = () => {
         ticket.style.display = 'none';
     };
 
-    // IMPRIMIR TICKET INDIVIDUAL
-
     document.getElementById('ticket-imprimir').onclick = () => {
         window.print();
     };
 }
-
-// ============================================================
-// MENSAJES
-// ============================================================
 
 function mostrarMensaje(texto) {
     const elemento = document.getElementById('mensaje-supermercado');
@@ -2869,9 +2901,6 @@ function mostrarMensaje(texto) {
     }, 2500);
 }
 
-// ============================================================
-// HUD
-// ============================================================
 
 function actualizarHUD() {
     const entidades = document.getElementById('estado-entidades');
@@ -2897,10 +2926,6 @@ function actualizarHUD() {
     actualizarEstadoVista();
 }
 
-// ============================================================
-// EVENTOS
-// ============================================================
-
 function configurarEventos() {
     window.addEventListener('keydown', evento => {
         if (
@@ -2911,8 +2936,6 @@ function configurarEventos() {
         }
 
         teclas[evento.code] = true;
-
-        // SALTO
 
         if (
             evento.code === 'Space' &&
@@ -2926,8 +2949,6 @@ function configurarEventos() {
             jugadorEnSuelo = false;
         }
 
-        // CÁMARAS 1 A 9
-
         if (/^Digit[1-9]$/.test(evento.code)) {
             cambiarVistaSeguridad(Number(evento.code.slice(-1)));
         }
@@ -2936,15 +2957,11 @@ function configurarEventos() {
             cambiarVistaSeguridad(Number(evento.code.slice(-1)));
         }
 
-        // CÁMARAS 10 A 21 MEDIANTE F1 A F12
-
         if (/^F([1-9]|1[0-2])$/.test(evento.code)) {
             const numeroFuncion = Number(evento.code.slice(1));
 
             cambiarVistaSeguridad(9 + numeroFuncion);
         }
-
-        // VOLVER A LA VISTA DEL JUGADOR
 
         if (
             evento.code === 'Digit0' ||
@@ -2986,10 +3003,6 @@ function configurarEventos() {
         );
     });
 }
-
-// ============================================================
-// BUCLE PRINCIPAL
-// ============================================================
 
 function iniciarAnimacion() {
     renderizador.setAnimationLoop(() => {
