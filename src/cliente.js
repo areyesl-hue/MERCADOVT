@@ -16,6 +16,7 @@ const ESTADOS = {
     CAJA: 'CAJA',
     PAGANDO: 'PAGANDO',
     REGRESANDO: 'REGRESANDO',
+    PREPARANDO_PAGO: 'PREPARANDO_PAGO',
     REGRESANDO_CARRITO: 'REGRESANDO_CARRITO',
     FINALIZADO: 'FINALIZADO'
 };
@@ -5287,7 +5288,63 @@ function guardarProducto() {
         }
     }
 
-    
+    function obtenerPuntoPreparacionPago() {
+
+    const distancia = 2.5;
+
+    const direcciones = [
+        { x: 0, z: 1 },
+        { x: 0, z: -1 },
+        { x: 1, z: 0 },
+        { x: -1, z: 0 },
+        { x: 0.7, z: 0.7 },
+        { x: -0.7, z: 0.7 },
+        { x: 0.7, z: -0.7 },
+        { x: -0.7, z: -0.7 }
+    ];
+
+    const candidatos = [];
+
+    for (const direccion of direcciones) {
+
+        const destino = {
+            x: grupo.position.x + direccion.x * distancia,
+            z: grupo.position.z + direccion.z * distancia
+        };
+
+        destino.x = limitar(
+            destino.x,
+            -config.limiteX,
+            config.limiteX
+        );
+
+        destino.z = limitar(
+            destino.z,
+            config.limiteZMin,
+            config.limiteZMax
+        );
+
+        const camino = encontrarCamino(
+            grupo.position,
+            destino
+        );
+
+        if (!camino?.length) continue;
+
+        candidatos.push({
+            destino,
+            camino,
+            longitud: camino.length
+        });
+    }
+
+    if (!candidatos.length) return null;
+
+    // Preferir el recorrido más corto entre los puntos libres.
+    candidatos.sort((a, b) => a.longitud - b.longitud);
+
+    return candidatos[0].destino;
+}
  
 function dirigirseACaja(
     posicionCaja = config.posicionCaja,
@@ -5351,11 +5408,27 @@ function iniciarPagoMovil(callback = null) {
         total
     };
 
-    ruta = [];
-    objetivo = null;
-    indiceRuta = 0;
+const puntoPago = obtenerPuntoPreparacionPago();
+
+if (puntoPago) {
+
+    const pudoMoverse = establecerObjetivo(
+        puntoPago,
+        ESTADOS.PREPARANDO_PAGO
+    );
+
+    if (!pudoMoverse) {
+        cambiarEstado(ESTADOS.PAGANDO);
+    }
+
+} else {
+
+    console.warn(
+        `[CLIENTE ${id}] No encontró un espacio libre para pagar.`
+    );
 
     cambiarEstado(ESTADOS.PAGANDO);
+}
 
     console.log('[TICKET DE PAGO MOVIL]', ticketPendiente);
 
@@ -5866,6 +5939,21 @@ function actualizar(delta) {
         case ESTADOS.ACERCANDO:
         case ESTADOS.RUTA:
         case ESTADOS.CAJA:
+            case ESTADOS.PREPARANDO_PAGO: {
+
+    const llegoAlPunto = moverHaciaDestino(delta);
+
+    if (llegoAlPunto) {
+
+        console.log(
+            `[CLIENTE ${id}] Llegó a la zona de pago móvil.`
+        );
+
+        cambiarEstado(ESTADOS.PAGANDO);
+    }
+
+    break;
+}
         case ESTADOS.REGRESANDO: {
 
             const estadoActual = estado;
