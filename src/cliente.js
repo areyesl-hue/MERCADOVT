@@ -696,16 +696,21 @@ function crearTelefonoMovilEnMano() {
                 );
             }
 
-            // Posición del teléfono respecto a la mano
-            telefono.position.set(0, 0.035, 0.045);
+ // Prueba de posición y orientación
+telefono.scale.setScalar(1.5);
 
-            // Orientación inicial
-            telefono.rotation.set(0, 0, 0);
+telefono.position.set(0, 0.02, 0.08);
+
+telefono.rotation.set(
+    0,
+    Math.PI,
+    0
+);
 
             // Sujetar a la mano derecha
             rig.manoDerecha.add(telefono);
 
-            telefono.visible = estado === ESTADOS.PAGANDO;
+            telefono.visible = true;
 
             telefonoMovil = telefono;
 
