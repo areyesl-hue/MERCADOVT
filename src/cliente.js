@@ -1,10 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-
-
-
-
 const ESTADOS = {
     INACTIVO: 'INACTIVO',
     ENTRANDO: 'ENTRANDO',
@@ -334,6 +330,12 @@ export function crearClienteSupermercado(scene, opciones = {}) {
     let detenido = false;
     let entradaNotificada = false;
 
+let telefonoMovil = null;
+let materialPantallaTelefono = null;
+let texturaQRTelefono = null;
+let pagoMovilConfirmado = false;
+let callbackPagoMovil = null;
+
     let estado = config.inactivo
         ? ESTADOS.INACTIVO
         : ESTADOS.BUSCANDO;
@@ -641,6 +643,126 @@ console.log('[HUESO]', obj.name, '=>', normalizarNombre(obj.name));
         });
     }
 
+    // ============================================================
+// TELEFONO MOVIL PARA PAGO CON QR
+// ============================================================
+
+function crearTelefonoMovilEnMano() {
+    if (!rig?.manoDerecha || telefonoMovil) return;
+
+    const loaderTelefono = new GLTFLoader();
+
+    loaderTelefono.load(
+        '/modelos/celular.glb',
+
+        (gltf) => {
+            const telefono = gltf.scene;
+
+            telefono.name = 'TELEFONO_PAGO_MOVIL';
+
+            // Ajustar escala del modelo
+            telefono.scale.set(1, 1, 1);
+
+            // Buscar la pantalla creada en Blender
+            let pantallaEncontrada = false;
+
+            telefono.traverse((objeto) => {
+                if (!objeto.isMesh) return;
+
+                objeto.castShadow = false;
+                objeto.receiveShadow = false;
+
+                if (objeto.name === 'PANTALLA_QR') {
+                    materialPantallaTelefono = new THREE.MeshBasicMaterial({
+                        color: 0xffffff,
+                        side: THREE.DoubleSide
+                    });
+
+                    objeto.material = materialPantallaTelefono;
+                    pantallaEncontrada = true;
+                }
+            });
+
+            if (!pantallaEncontrada) {
+                console.warn(
+                    '[TELEFONO] No se encontró la malla PANTALLA_QR en celular.glb'
+                );
+            }
+
+            // Posición del teléfono respecto a la mano
+            telefono.position.set(0, 0.035, 0.045);
+
+            // Orientación inicial
+            telefono.rotation.set(0, 0, 0);
+
+            // Sujetar a la mano derecha
+            rig.manoDerecha.add(telefono);
+
+            telefono.visible = false;
+
+            telefonoMovil = telefono;
+
+            console.log('[TELEFONO] Modelo cargado correctamente.');
+        },
+
+        undefined,
+
+        (error) => {
+            console.error(
+                '[TELEFONO] Error al cargar celular.glb:',
+                error
+            );
+        }
+    );
+}
+
+
+function actualizarQRTelefono(datosQR) {
+    if (!telefonoMovil || !materialPantallaTelefono) {
+        console.warn('[TELEFONO] El celular todavía no está creado.');
+        return;
+    }
+
+    if (!window.QRCode) {
+        console.warn('[TELEFONO] No se encontró el generador QR.');
+        return;
+    }
+
+    const contenedor = document.createElement('div');
+
+    new window.QRCode(contenedor, {
+        text: typeof datosQR === 'string'
+            ? datosQR
+            : JSON.stringify(datosQR),
+        width: 256,
+        height: 256,
+        correctLevel: window.QRCode.CorrectLevel.M
+    });
+
+    const canvas = contenedor.querySelector('canvas');
+
+    if (!canvas) {
+        console.error('[TELEFONO] No se pudo generar el QR.');
+        return;
+    }
+
+    const textura = new THREE.CanvasTexture(canvas);
+
+    textura.colorSpace = THREE.SRGBColorSpace;
+    textura.needsUpdate = true;
+
+    if (texturaQRTelefono) {
+        texturaQRTelefono.dispose();
+    }
+
+    texturaQRTelefono = textura;
+
+    materialPantallaTelefono.map = textura;
+    materialPantallaTelefono.color.set(0xffffff);
+    materialPantallaTelefono.needsUpdate = true;
+}
+
+
     function buscarHueso(...patrones) {
         for (const [nombre, hueso] of Object.entries(huesos)) {
             if (patrones.some(patron => nombre.includes(patron))) {
@@ -728,10 +850,8 @@ function actualizarRig() {
         'rightcalf'
     );
 
-    // Actualizar matrices mundiales del rig.
     grupo.updateMatrixWorld(true);
 
-    // Diagnosticar la posición de ambas palmas.
     for (const [lado, mano] of [
         ['izquierdo', rig.manoIzquierda],
         ['derecho', rig.manoDerecha]
@@ -743,12 +863,10 @@ function actualizarRig() {
             continue;
         }
 
-        // Posición mundial del hueso de la mano.
         const posicionMano = mano.getWorldPosition(
             new THREE.Vector3()
         );
 
-        // Posición mundial estimada de la palma.
         const posicionPalma = mano.localToWorld(
             offsetPalmaLocal.clone()
         );
@@ -865,7 +983,6 @@ function medirAlcanceBrazo(brazo, cajaProducto) {
         new THREE.Vector3()
     );
 
-    // Punto más cercano de la superficie del producto.
     const contacto = new THREE.Vector3(
         THREE.MathUtils.clamp(
             posicionMano.x,
@@ -903,7 +1020,7 @@ function medirAlcanceBrazo(brazo, cajaProducto) {
         new THREE.Vector3()
     );
 
-    // Longitud real de los segmentos del brazo.
+   
     const longitudSuperior = hombro.distanceTo(codo);
     const longitudInferior = codo.distanceTo(posicionMano);
 
@@ -990,7 +1107,7 @@ function seleccionarBrazoAgarre(producto) {
     const elegido = candidatos[0];
 
     ladoAgarre = elegido.lado;
-    // Guardar el producto y el punto exacto seleccionado.
+  
     if (!ikAgarre.puntoContactoFijado) {
         ikAgarre.puntoContactoFijado =
             new THREE.Vector3();
@@ -1222,13 +1339,12 @@ function seleccionarBrazoAgarre(producto) {
 function animarAgacharse(intensidad = 1) {
     const t = suavizar(limitar(intensidad, 0, 1));
 
-    // Guardar la posición original de la pelvis una sola vez.
+  
     if (rig.cadera && !rig.cadera.userData.posicionBaseAgachado) {
         rig.cadera.userData.posicionBaseAgachado =
             rig.cadera.position.clone();
     }
 
-    // Descenso progresivo de la pelvis.
     if (rig.cadera) {
         const base = rig.cadera.userData.posicionBaseAgachado;
 
@@ -1246,7 +1362,6 @@ function animarAgacharse(intensidad = 1) {
         );
     }
 
-    // Muslos.
     if (rig.piernaIzquierda) {
         aplicarRotacionEuler(
             rig.piernaIzquierda,
@@ -1265,8 +1380,6 @@ function animarAgacharse(intensidad = 1) {
         );
     }
 
-    // Pantorrillas. Se comprueba que los huesos existan
-    // antes de intentar modificarlos.
     if (rig.pantorrillaIzquierda) {
         aplicarRotacionEuler(
             rig.pantorrillaIzquierda,
@@ -1318,7 +1431,7 @@ function animarRecogerProcedural() {
     const agachado = productoEsInferior ? 1 : 0;
     const productoArriba = productoEsSuperior ? 1 : 0;
 
-    // Una sola llamada, con intensidad progresiva.
+   
     animarAgacharse(
         agachado * suavizar(progreso * 1.35)
     );
@@ -1410,10 +1523,10 @@ function orientarHuesoHaciaDireccion(
         return false;
     }
 
-    // Actualizar matrices del rig.
+    
     grupo.updateMatrixWorld(true);
 
-    // Normalizar las direcciones.
+  
     ikAgarre.direccionActual
         .copy(direccionActual)
         .normalize();
@@ -1422,19 +1535,18 @@ function orientarHuesoHaciaDireccion(
         .copy(direccionDeseada)
         .normalize();
 
-    // Obtener la rotación mundial actual del hueso.
+   
     hueso.getWorldQuaternion(
         ikAgarre.quaternionPadre
     );
 
-    // Calcular la rotación necesaria en espacio mundial.
+    
     ikAgarre.quaternionDeltaMundo
         .setFromUnitVectors(
             ikAgarre.direccionActual,
             ikAgarre.direccionDeseada
         );
 
-    // Convertir la rotación mundial a espacio local.
     hueso.parent.getWorldQuaternion(
         ikAgarre.quaternionPadre
     );
@@ -1448,12 +1560,12 @@ function orientarHuesoHaciaDireccion(
         .multiply(ikAgarre.quaternionDeltaMundo)
         .multiply(ikAgarre.quaternionPadre);
 
-    // Aplicar la corrección a la orientación local.
+  
     hueso.quaternion
         .premultiply(ikAgarre.quaternionDeltaLocal)
         .normalize();
 
-    // Actualizar el rig.
+  
     grupo.updateMatrixWorld(true);
 
     return true;
@@ -1469,10 +1581,6 @@ function resolverIKBrazo(brazo, objetivo) {
     }
 
     grupo.updateMatrixWorld(true);
-
-    // --------------------------------------------------
-    // 1. POSICIONES ACTUALES
-    // --------------------------------------------------
 
     hombro.getWorldPosition(ikAgarre.hombro);
     codo.getWorldPosition(ikAgarre.codo);
@@ -1501,10 +1609,6 @@ function resolverIKBrazo(brazo, objetivo) {
         return false;
     }
 
-    // --------------------------------------------------
-    // 2. LIMITAR DISTANCIA DEL OBJETIVO
-    // --------------------------------------------------
-
     const distanciaMinima = Math.abs(
         longitudBrazo - longitudAntebrazo
     ) + 0.005;
@@ -1527,10 +1631,6 @@ function resolverIKBrazo(brazo, objetivo) {
         distanciaAjustada
     );
 
-    // --------------------------------------------------
-    // 3. CALCULAR PLANO DE FLEXIÓN DEL CODO
-    // --------------------------------------------------
-
     ikAgarre.codoActual.subVectors(
         ikAgarre.codo,
         ikAgarre.hombro
@@ -1547,7 +1647,6 @@ function resolverIKBrazo(brazo, objetivo) {
         -proyeccion
     );
 
-    // Conservar la dirección natural del codo.
     if (ikAgarre.perpendicular.lengthSq() < 0.000001) {
         ikAgarre.perpendicular.set(
             0,
@@ -1576,9 +1675,6 @@ function resolverIKBrazo(brazo, objetivo) {
 
     ikAgarre.perpendicular.normalize();
 
-    // --------------------------------------------------
-    // 4. CALCULAR POSICIÓN OBJETIVO DEL CODO
-    // --------------------------------------------------
 
     const distanciaCodo = (
         longitudBrazo * longitudBrazo -
@@ -1604,10 +1700,6 @@ function resolverIKBrazo(brazo, objetivo) {
         alturaCodo
     );
 
-    // --------------------------------------------------
-    // 5. ORIENTAR BRAZO SUPERIOR
-    // --------------------------------------------------
-
     ikAgarre.direccionActual.subVectors(
         ikAgarre.codo,
         ikAgarre.hombro
@@ -1627,10 +1719,6 @@ function resolverIKBrazo(brazo, objetivo) {
     }
 
     grupo.updateMatrixWorld(true);
-
-    // --------------------------------------------------
-    // 6. ORIENTAR ANTEBRAZO HACIA LA MANO
-    // --------------------------------------------------
 
     codo.getWorldPosition(ikAgarre.codo);
     mano.getWorldPosition(ikAgarre.muneca);
@@ -1718,9 +1806,6 @@ function ajustarBrazoAlProducto(
         return false;
     }
 
-    // --------------------------------------------------
-    // 1. ACTUALIZAR MATRICES
-    // --------------------------------------------------
 
     grupo.updateMatrixWorld(true);
     mano.updateWorldMatrix(true, false);
@@ -1740,9 +1825,6 @@ function ajustarBrazoAlProducto(
         ikAgarre.centroProducto
     );
 
-    // --------------------------------------------------
-    // 2. CALCULAR PUNTO DE CONTACTO
-    // --------------------------------------------------
 
     const puntoManual =
         producto.userData?.puntoAgarreLocal;
@@ -1810,10 +1892,6 @@ function ajustarBrazoAlProducto(
         }
     }
 
-    // --------------------------------------------------
-    // 3. NORMAL DE CONTACTO
-    // --------------------------------------------------
-
     const normalManual =
         producto.userData?.normalAgarreLocal;
 
@@ -1856,10 +1934,6 @@ function ajustarBrazoAlProducto(
 
     ikAgarre.normalContacto.normalize();
 
-    // --------------------------------------------------
-    // 4. OFFSET DE LA PALMA
-    // --------------------------------------------------
-
     ikAgarre.offsetPalmaLocal.copy(
         ladoAgarre === 'izquierdo'
             ? offsetPalmaIzquierdaLocal
@@ -1890,10 +1964,6 @@ function ajustarBrazoAlProducto(
         .applyMatrix4(mano.matrixWorld)
         .sub(ikAgarre.muneca);
 
-    // --------------------------------------------------
-    // 5. OBJETIVO DE CONTACTO
-    // --------------------------------------------------
-
     const distanciaContacto = limitar(
         numero(
             producto.userData?.distanciaContactoMano,
@@ -1916,10 +1986,7 @@ function ajustarBrazoAlProducto(
             );
     }
 
-    // --------------------------------------------------
-    // 6. PROGRESO DE EXTENSIÓN
-    // --------------------------------------------------
-
+  
     const progreso = limitar(
         tiempoEstado /
         Math.max(
@@ -1955,23 +2022,16 @@ function ajustarBrazoAlProducto(
         return false;
     }
 
-    // --------------------------------------------------
-    // 7. CALCULAR OBJETIVO DE LA MUÑECA
-    // --------------------------------------------------
-
     const objetivoMuneca = new THREE.Vector3()
         .copy(ikAgarre.objetivoContacto)
         .sub(ikAgarre.offsetPalmaMundo);
 
-    // Interpolar desde la posición actual hasta el producto.
+ 
     objetivoMuneca.lerp(
         ikAgarre.muneca,
         1 - pesoIK
     );
 
-    // --------------------------------------------------
-    // 8. RESOLVER IK SIN RECURSIVIDAD
-    // --------------------------------------------------
 
     const agarreResuelto = resolverIKBrazo(
         brazo,
@@ -1981,10 +2041,6 @@ function ajustarBrazoAlProducto(
     if (!agarreResuelto) {
         return false;
     }
-
-    // --------------------------------------------------
-    // 9. ACTUALIZAR POSICIÓN REAL DE LA MANO
-    // --------------------------------------------------
 
     grupo.updateMatrixWorld(true);
     mano.updateWorldMatrix(true, false);
@@ -2002,10 +2058,7 @@ function ajustarBrazoAlProducto(
         .clone()
         .add(ikAgarre.offsetPalmaMundo);
 
-    // --------------------------------------------------
-    // 10. COMPROBAR CONTACTO
-    // --------------------------------------------------
-
+  
     const errorContacto = posicionPalma.distanceTo(
         ikAgarre.objetivoContacto
     );
@@ -2096,7 +2149,6 @@ function mezclarPoseAgarreInspeccion() {
         limitar(tiempoEstado / duracion, 0, 1)
     );
 
-    // Huesos que controla exclusivamente el IK.
     const huesosBrazo = [
         rig.brazoIzquierdo,
         rig.antebrazoIzquierdo,
@@ -2109,13 +2161,11 @@ function mezclarPoseAgarreInspeccion() {
     for (const pose of poseAgarreInspeccion.huesos) {
         if (!pose.hueso) continue;
 
-        // No modificar los brazos ni las manos.
+       
         if (huesosBrazo.includes(pose.hueso)) {
             continue;
         }
 
-        // Mantener un objetivo fijo, sin recalcularlo
-        // a partir de la rotación actual en cada fotograma.
         pose.hueso.quaternion.slerpQuaternions(
             pose.inicial,
             pose.objetivo,
@@ -2160,19 +2210,16 @@ function prepararDepositoProducto() {
 
     animacionDeposito.alturaProducto = tamanoTemporal.y;
 
-    // Capturar el centro del producto respecto a la palma.
     mano.worldToLocal(vectorTemporal);
 
     animacionDeposito.centroDesdePalmaLocal
         .copy(vectorTemporal)
         .sub(ikAgarre.offsetPalmaLocal);
 
-    // Capturar la posición mundial inicial de la mano.
     mano.getWorldPosition(
         animacionDeposito.palmaInicial
     );
 
-    // Obtener el centro final previsto del producto.
     const puntoDeposito =
         config.carrito.obtenerPuntoDeposito(
             undefined,
@@ -2192,8 +2239,6 @@ function prepararDepositoProducto() {
         puntoDeposito
     );
 
-    // Calcular el desplazamiento entre la muñeca
-    // y el centro del producto.
     mano.getWorldPosition(ikAgarre.muneca);
 
     ikAgarre.offsetPalmaMundo
@@ -2201,8 +2246,6 @@ function prepararDepositoProducto() {
         .applyMatrix4(mano.matrixWorld)
         .sub(ikAgarre.muneca);
 
-    // La palma debe llegar al punto que permite
-    // colocar el centro del producto en la cesta.
     animacionDeposito.palmaFinal
         .copy(animacionDeposito.objetivoCentro)
         .sub(ikAgarre.offsetPalmaMundo);
@@ -2230,8 +2273,6 @@ function prepararDepositoProducto() {
 
     grupo.updateMatrixWorld(true);
 
-    // Interpolar la palma desde su posición original
-    // hasta el punto de depósito.
     animacionDeposito.objetivoPalma.lerpVectors(
         animacionDeposito.palmaInicial,
         animacionDeposito.palmaFinal,
@@ -2316,7 +2357,7 @@ function liberarProductoEnCarrito() {
         return false;
     }
 
-    // Registrar que el producto ya pertenece al carrito.
+   
     compra.objeto.userData.enCarrito = true;
     compra.objeto.userData.reservado = false;
 
@@ -2325,7 +2366,6 @@ function liberarProductoEnCarrito() {
     animacionDeposito.compra = compra;
     animacionDeposito.liberado = true;
 
-    // A partir de aquí el producto ya no depende de la mano.
     productoEnMano = null;
 
     productoOriginal = null;
@@ -2389,10 +2429,6 @@ function animarGuardarProcedural() {
     const inicioRetirada =
         inicioLiberacion + faseLiberacion;
 
-    // =========================================
-    // PREPARAR
-    // =========================================
-
     if (progreso < inicioDescenso) {
 
         animacionDeposito.fase = 'PREPARAR';
@@ -2439,10 +2475,6 @@ function animarGuardarProcedural() {
 
         return;
     }
-
-    // =========================================
-    // DESCENDER
-    // =========================================
 
     if (progreso < inicioLiberacion) {
 
@@ -2494,16 +2526,10 @@ function animarGuardarProcedural() {
         return;
     }
 
-    // =========================================
-    // LIBERAR PRODUCTO
-    // =========================================
-
     if (progreso < inicioRetirada) {
 
         animacionDeposito.fase = 'LIBERAR';
 
-        // Mantener el brazo en el punto de depósito
-        // durante el breve instante de liberación.
         if (!animacionDeposito.liberado) {
 
             if (!liberarProductoEnCarrito()) {
@@ -2534,10 +2560,6 @@ function animarGuardarProcedural() {
 
         return;
     }
-
-    // =========================================
-    // RETIRAR BRAZO
-    // =========================================
 
     animacionDeposito.fase = 'RETIRAR';
 
@@ -2802,8 +2824,6 @@ function actualizarAnimacionAgarre(delta) {
 
     const suave = suavizar(t);
 
-    // Desplazar el producto desde el contacto
-    // hasta la posición correcta en la palma.
     producto.position.lerpVectors(
         animacionAgarre.posicionInicial,
         animacionAgarre.posicionFinal,
@@ -2884,7 +2904,6 @@ function actualizarAnimacionProducto(delta) {
     mano.updateMatrixWorld(true);
     producto.updateMatrixWorld(true);
 
-    // Interpolar la posición mundial deseada del pivote.
     const posicionProductoObjetivo =
         animacionProducto.posicionTemporal.lerpVectors(
             animacionProducto.posicionInicial,
@@ -2892,13 +2911,10 @@ function actualizarAnimacionProducto(delta) {
             suave
         );
 
-    // Obtener el origen mundial de la mano.
     const posicionMano = new THREE.Vector3();
 
     mano.getWorldPosition(posicionMano);
 
-    // Calcular el desplazamiento completo del pivote
-    // del producto respecto al origen de la mano.
     const posicionPivoteMundo =
         producto.position.clone().applyMatrix4(
             mano.matrixWorld
@@ -2907,14 +2923,12 @@ function actualizarAnimacionProducto(delta) {
     const desplazamientoPivote =
         posicionPivoteMundo.sub(posicionMano);
 
-    // La muñeca debe llegar a una posición que permita
-    // que el pivote del producto alcance su destino.
     const objetivoMano =
         posicionProductoObjetivo.clone().sub(
             desplazamientoPivote
         );
 
-    // Resolver el brazo para transportar el producto.
+   
     resolverIKBrazo(
         brazo,
         objetivoMano
@@ -2923,7 +2937,6 @@ function actualizarAnimacionProducto(delta) {
     grupo.updateMatrixWorld(true);
     mano.updateMatrixWorld(true);
 
-    // Interpolar la orientación mundial del producto.
     const quaternionProductoObjetivo =
         animacionProducto.quaternionTemporal
             .slerpQuaternions(
@@ -2936,8 +2949,6 @@ function actualizarAnimacionProducto(delta) {
 
     mano.getWorldQuaternion(quaternionMano);
 
-    // Convertir la orientación mundial deseada
-    // a coordenadas locales de la mano.
     animacionProducto.quaternionPadreTemporal
         .copy(quaternionMano)
         .invert();
@@ -2947,7 +2958,6 @@ function actualizarAnimacionProducto(delta) {
         .multiply(quaternionProductoObjetivo)
         .normalize();
 
-    // Interpolar también la escala mundial.
     const escalaInicial = animacionProducto.escalaInicial;
     const escalaFinal = animacionProducto.escalaFinal;
 
@@ -2998,24 +3008,21 @@ productoReubicadoPendiente =
     animacionAgarre.activa = false;
     animacionAgarre.tiempo = 0;
 
-    // Separar el producto de la mano.
+  
     producto.parent?.remove(producto);
 
-    // Recuperar su padre original o el padre
-    // correspondiente al nuevo estante.
     if (original.parent) {
         original.parent.add(producto);
     } else {
         scene.add(producto);
     }
 
-    // Colocar el producto en su transformación final.
+    
     producto.position.copy(original.posicion);
     producto.quaternion.copy(original.quaternion);
     producto.scale.copy(original.escala);
     producto.visible = original.visible;
 
-    // Registrar la reubicación cuando corresponda.
     if (tipoDevolucion === 'REUBICAR') {
         producto.userData.reubicado = true;
 
@@ -3031,13 +3038,13 @@ productoReubicadoPendiente =
         producto.userData.reubicado = false;
     }
 
-    // Liberar la reserva del producto.
+  
     producto.userData.reservado = false;
     delete producto.userData.reservadoPor;
 
     producto.updateMatrixWorld(true);
 
-    // Limpiar referencias.
+   
     productoEnMano = null;
     productoOriginal = null;
 
@@ -3085,6 +3092,7 @@ productoReubicadoPendiente =
                 grupo.add(modelo);
 
                 detectarHuesos(modelo);
+                crearTelefonoMovilEnMano();
                 actualizarRig();
 
                 if (!opciones.offsetPalmaProducto) {
@@ -3176,7 +3184,7 @@ function actualizarSeguimientoCarrito() {
             estadosJuntoAlCliente.includes(estado)
     });
 
-    // SEGUIMIENTO NORMAL
+   
     if (estadosSeguimiento.includes(estado)) {
         console.trace('[ORDEN DE SEGUIMIENTO NORMAL]');
 
@@ -3184,7 +3192,6 @@ function actualizarSeguimientoCarrito() {
         return;
     }
 
-    // ESTACIONAMIENTO LATERAL
     if (estadosJuntoAlCliente.includes(estado)) {
         const distanciaLateral = 1.05;
 
@@ -3209,7 +3216,6 @@ function actualizarSeguimientoCarrito() {
         return;
     }
 
-    // DETENER EN OTROS ESTADOS
     if (carrito.siguiendo) {
         console.log('[DETENIENDO SEGUIMIENTO CARRITO]', estado);
         carrito.detenerSeguimiento();
@@ -3235,10 +3241,12 @@ function cambiarEstado(nuevoEstado) {
 
     const anterior = estado;
 
-    // Actualizar el estado antes de modificar el carrito.
     estado = nuevoEstado;
     tiempoEstado = 0;
-// Reiniciar el depósito cuando comienza una compra.
+    if (telefonoMovil) {
+    telefonoMovil.visible = nuevoEstado === ESTADOS.PAGANDO;
+}
+
 if (nuevoEstado === ESTADOS.GUARDANDO) {
 
     animacionDeposito.preparada = false;
@@ -3274,7 +3282,6 @@ if (nuevoEstado === ESTADOS.GUARDANDO) {
         poseAgarreInspeccion.huesos.length = 0;
     }
 
-    // Actualizar el seguimiento según el nuevo estado.
     console.log('[ACTUALIZANDO CARRITO POR CAMBIO DE ESTADO]', {
         estado,
         ladoAgarre
@@ -3338,10 +3345,6 @@ if (nuevoEstado === ESTADOS.GUARDANDO) {
     }
 }
 
-
-    
-    
-    
 
     let obstaculosCache = [];
 
@@ -3889,8 +3892,6 @@ function recuperarMovimiento(forzar = false) {
         ruta = nuevoCamino;
         indiceRuta = 0;
 
-        // No reiniciar intentosMovimiento aquí.
-        // La ruta puede volver a bloquearse.
         return true;
     }
 
@@ -4397,8 +4398,6 @@ function obtenerPuntoFrenteProducto(producto) {
 
     const candidatos = [];
 
-    // Buscar alrededor del producto, aumentando la separación
-    // hasta encontrar un punto realmente transitable.
     for (const lado of lados) {
         const borde = lado.x !== 0 ? hx : hz;
 
@@ -4441,8 +4440,6 @@ function obtenerPuntoFrenteProducto(producto) {
                 lado
             });
 
-            // Ya encontramos el punto transitable más cercano
-            // de este lado. No hace falta alejarlo más.
             break;
         }
     }
@@ -4451,8 +4448,6 @@ function obtenerPuntoFrenteProducto(producto) {
         return null;
     }
 
-    // Primero elegir el punto más cercano al producto.
-    // En caso de empate, elegir el recorrido más corto.
     candidatos.sort((a, b) =>
         a.separacion - b.separacion ||
         a.recorrido - b.recorrido
@@ -4552,27 +4547,14 @@ if (destino) {
         return;
     }
 
-    // --------------------------------------------------
-    // 1. ACTUALIZAR MATRICES
-    // --------------------------------------------------
-
     grupo.updateMatrixWorld(true);
     mano.updateMatrixWorld(true);
     producto.updateMatrixWorld(true);
-
-    // --------------------------------------------------
-    // 2. OBTENER POSICIÓN REAL DE LA MUÑECA
-    // --------------------------------------------------
 
     const palmaMundo = mano.getWorldPosition(
         new THREE.Vector3()
     );
 
-
-
-    // --------------------------------------------------
-    // 3. COMPROBAR CONTACTO CON EL PRODUCTO
-    // --------------------------------------------------
 
     const cajaProducto = new THREE.Box3()
         .setFromObject(producto);
@@ -4611,10 +4593,6 @@ if (destino) {
         return;
     }
 
-    // --------------------------------------------------
-    // 4. GUARDAR PUNTO DE CONTACTO
-    // --------------------------------------------------
-
     const puntoContactoLocal = producto.worldToLocal(
         ikAgarre.puntoContacto.clone()
     );
@@ -4626,10 +4604,6 @@ if (destino) {
                 producto.matrixWorld.clone().invert()
             )
             .normalize();
-
-    // --------------------------------------------------
-    // 5. GUARDAR LA TRANSFORMACIÓN ORIGINAL
-    // --------------------------------------------------
 
     grupo.updateMatrixWorld(true);
     mano.updateMatrixWorld(true);
@@ -4647,29 +4621,18 @@ if (destino) {
         new THREE.Vector3()
     );
 
-    // --------------------------------------------------
-    // 6. UNIR EL PRODUCTO A LA MANO SIN TELETRANSPORTARLO
-    // --------------------------------------------------
-
     mano.attach(producto);
 
     grupo.updateMatrixWorld(true);
     mano.updateMatrixWorld(true);
     producto.updateMatrixWorld(true);
 
-    // --------------------------------------------------
-    // 7. CALCULAR EL AGARRE REAL EN LA PALMA
-    // --------------------------------------------------
-
-    // Punto de contacto del producto convertido
-    // a coordenadas locales de la mano.
     const contactoMundo = ikAgarre.puntoContacto.clone();
 
     const contactoEnMano = mano.worldToLocal(
         contactoMundo.clone()
     );
 
-    // Posición del centro de la palma.
     const centroPalma = new THREE.Vector3();
 
     mano.getWorldPosition(centroPalma);
@@ -4678,8 +4641,6 @@ if (destino) {
         centroPalma.clone()
     );
 
-    // Desplazamiento pequeño para que el producto
-    // quede sujeto y no suspendido frente a la mano.
     const ajustePalma = new THREE.Vector3(
         0,
         0.025,
@@ -4694,14 +4655,9 @@ if (destino) {
             .add(ajustePalma)
     );
 
-    // Conservar la orientación original del producto.
     const quaternionFinal = producto.quaternion.clone();
 
     const escalaFinal = producto.scale.clone();
-
-    // --------------------------------------------------
-    // 8. CONFIGURAR LA ANIMACIÓN DEL AGARRE
-    // --------------------------------------------------
 
     animacionAgarre.activa = true;
     animacionAgarre.tiempo = 0;
@@ -4739,10 +4695,6 @@ if (destino) {
     productoEnMano = producto;
     productoConCajaAgarre = null;
 
-    // --------------------------------------------------
-    // 8. PREPARAR POSE DE INSPECCIÓN
-    // --------------------------------------------------
-
 poseAgarreInspeccion.huesos.length = 0;
 
 for (const [hueso] of huesosBase) {
@@ -4765,10 +4717,6 @@ for (const [hueso] of huesosBase) {
 
     poseAgarreInspeccion.activa =
         poseAgarreInspeccion.huesos.length > 0;
-
-    // --------------------------------------------------
-    // 9. REGISTRAR PRODUCTO
-    // --------------------------------------------------
 
     productosExaminados.add(producto);
 
@@ -5035,7 +4983,6 @@ function devolverProductoAlEstante() {
     producto.updateMatrixWorld(true);
     original.parent.updateMatrixWorld(true);
 
-    // Calcular la transformación mundial del destino.
     const matrizOriginal = new THREE.Matrix4();
 
     matrizOriginal.compose(
@@ -5061,8 +5008,6 @@ function devolverProductoAlEstante() {
         escalaFinal
     );
 
-    // Si se trata de una reubicación, caminar primero
-    // hasta el nuevo estante.
     if (
         animacionProducto.tipo === 'REUBICAR' &&
         animacionProducto.fase === null &&
@@ -5098,8 +5043,6 @@ function devolverProductoAlEstante() {
 
         animacionProducto.fase = null;
 
-        // Si no puede llegar al nuevo estante,
-        // regresar al lugar original.
         if (original.origen) {
             liberarReserva();
 
@@ -5112,7 +5055,6 @@ function devolverProductoAlEstante() {
         }
     }
 
-    // Obtener la mano que sostiene el producto.
     const brazo = obtenerRigBrazo();
     const mano = brazo?.mano;
 
@@ -5121,8 +5063,6 @@ function devolverProductoAlEstante() {
         return;
     }
 
-    // Asegurar que el producto permanezca unido
-    // a la mano durante toda la colocación.
     grupo.updateMatrixWorld(true);
 
     if (producto.parent !== mano) {
@@ -5131,7 +5071,6 @@ function devolverProductoAlEstante() {
 
     mano.updateMatrixWorld(true);
 
-    // Guardar la posición inicial de la muñeca.
     animacionProducto.manoInicial =
         new THREE.Vector3();
 
@@ -5139,7 +5078,6 @@ function devolverProductoAlEstante() {
         animacionProducto.manoInicial
     );
 
-    // Guardar el destino mundial del producto.
     animacionProducto.posicionInicial =
         new THREE.Vector3();
 
@@ -5173,7 +5111,6 @@ function devolverProductoAlEstante() {
         escalaFinal
     );
 
-    // Comenzar la extensión del brazo.
     animacionProducto.activa = true;
     animacionProducto.tiempo = 0;
     animacionProducto.fase = 'ALCANCE';
@@ -5185,7 +5122,6 @@ function devolverProductoAlEstante() {
 
     tiempoEstado = 0;
 
-    // Reiniciar los temporizadores del gesto.
     animacionAgarre.activa = false;
     animacionAgarre.tiempo = 0;
 }
@@ -5196,10 +5132,6 @@ function guardarProducto() {
     if (animacionDeposito.finalizado) return;
 
     animacionDeposito.preparada = false;
-
-    // =========================================
-    // COMPROBAR SI SE PUDO LIBERAR EL PRODUCTO
-    // =========================================
 
     if (
         animacionDeposito.error ||
@@ -5234,10 +5166,6 @@ function guardarProducto() {
         return;
     }
 
-    // =========================================
-    // REGISTRAR COMPRA
-    // =========================================
-
     const compra = animacionDeposito.compra;
 
     compras.push(compra);
@@ -5265,7 +5193,6 @@ function guardarProducto() {
         `| Total: ${compras.length}`
     );
 
-    // Limpiar animación.
     animacionDeposito.fase = null;
     animacionDeposito.compra = null;
 
@@ -5361,30 +5288,114 @@ function guardarProducto() {
     }
 
     
-    
-    
-
-    function dirigirseACaja(
-        posicionCaja = config.posicionCaja,
-        callback = null
-    ) {
-        if (compras.length === 0) {
-            cambiarEstado(ESTADOS.FINALIZADO);
-            return false;
-        }
-
-        callbackPagoPendiente = callback;
-
-        const destino = {
-            x: numero(posicionCaja.x, config.posicionCaja.x),
-            z: numero(posicionCaja.z, config.posicionCaja.z)
-        };
-
-        return establecerObjetivo(
-            destino,
-            ESTADOS.CAJA
-        );
+ 
+function dirigirseACaja(
+    posicionCaja = config.posicionCaja,
+    callback = null
+) {
+    if (compras.length === 0) {
+        cambiarEstado(ESTADOS.FINALIZADO);
+        return false;
     }
+
+    callbackPagoPendiente =
+        typeof callback === 'function' ? callback : null;
+
+    // Detener cualquier desplazamiento hacia la caja
+    ruta = [];
+    objetivo = null;
+    indiceRuta = 0;
+
+    // El cliente comienza el pago desde su ubicación actual
+    cambiarEstado(ESTADOS.PAGANDO);
+
+    return true;
+}
+
+
+
+function iniciarPagoMovil(callback = null) {
+
+    if (compras.length === 0) {
+        cambiarEstado(ESTADOS.FINALIZADO);
+        return false;
+    }
+
+    if (estado === ESTADOS.PAGANDO) {
+        return ticketPendiente;
+    }
+
+    callbackPagoMovil =
+        typeof callback === 'function' ? callback : null;
+
+    pagoMovilConfirmado = false;
+
+    const productos = compras.map(compra => ({
+        nombre: compra.nombre || 'Producto',
+        codigo: compra.codigo || '',
+        cantidad: 1,
+        precio: numero(compra.precio, 0)
+    }));
+
+    const total = productos.reduce(
+        (suma, producto) => suma + producto.precio,
+        0
+    );
+
+    ticketPendiente = {
+        folio: `MOVIL-${Date.now()}`,
+        fecha: new Date().toISOString(),
+        idCliente: id,
+        productos,
+        totalProductos: productos.length,
+        total
+    };
+
+    ruta = [];
+    objetivo = null;
+    indiceRuta = 0;
+
+    cambiarEstado(ESTADOS.PAGANDO);
+
+    console.log('[TICKET DE PAGO MOVIL]', ticketPendiente);
+
+    return ticketPendiente;
+}
+
+
+function confirmarPagoMovil(folio) {
+
+    if (estado !== ESTADOS.PAGANDO) {
+        return false;
+    }
+
+    if (!ticketPendiente || pagoMovilConfirmado) {
+        return false;
+    }
+
+    if (ticketPendiente.folio !== folio) {
+        console.warn('[PAGO MOVIL] Folio incorrecto.');
+        return false;
+    }
+
+    pagoMovilConfirmado = true;
+
+    ticketPendiente.pagado = true;
+    ticketPendiente.fechaPago = new Date().toISOString();
+
+    console.log('[PAGO MOVIL CONFIRMADO]', ticketPendiente);
+
+    const callback = callbackPagoMovil;
+    callbackPagoMovil = null;
+
+    if (callback) {
+        callback(ticketPendiente);
+    }
+
+    cambiarEstado(ESTADOS.FINALIZADO);
+
+    return true;
+}
 
     function completarPago() {
         const articulos = compras.map(compra => {
@@ -5851,10 +5862,6 @@ function actualizar(delta) {
         case ESTADOS.INACTIVO:
             break;
 
-        // =========================================
-        // MOVIMIENTO Y APROXIMACIÓN
-        // =========================================
-
         case ESTADOS.ENTRANDO:
         case ESTADOS.ACERCANDO:
         case ESTADOS.RUTA:
@@ -5978,10 +5985,6 @@ productoEsSuperior = esProductoSuperior(producto);
             break;
         }
 
-        // =========================================
-        // BUSCAR PRODUCTOS
-        // =========================================
-
         case ESTADOS.BUSCANDO: {
 
             if (
@@ -6003,10 +6006,6 @@ productoEsSuperior = esProductoSuperior(producto);
 
             break;
         }
-
-        // =========================================
-        // RECOGER PRODUCTO
-        // =========================================
 
         case ESTADOS.RECOGIENDO: {
 
@@ -6070,10 +6069,6 @@ productoEsSuperior = esProductoSuperior(producto);
             break;
         }
 
-        // =========================================
-        // INSPECCIONAR PRODUCTO
-        // =========================================
-
         case ESTADOS.INSPECCIONANDO: {
 
             animarInspeccionarProcedural();
@@ -6128,10 +6123,6 @@ productoEsSuperior = esProductoSuperior(producto);
             break;
         }
 
-        // =========================================
-        // DECIDIR SI COMPRA O DEVUELVE
-        // =========================================
-
         case ESTADOS.DECIDIENDO: {
 
             const duda = Math.sin(tiempoEstado * 2.15) * 0.035;
@@ -6185,10 +6176,6 @@ productoEsSuperior = esProductoSuperior(producto);
             break;
         }
 
-        // =========================================
-        // GUARDAR PRODUCTO
-        // =========================================
-
 case ESTADOS.GUARDANDO: {
 
     animarGuardarProcedural();
@@ -6202,10 +6189,6 @@ case ESTADOS.GUARDANDO: {
 
     break;
 }
-
-        // =========================================
-        // DEVOLVER PRODUCTO
-        // =========================================
 
      case ESTADOS.DEVOLVIENDO: {
 
@@ -6247,8 +6230,7 @@ case ESTADOS.GUARDANDO: {
         !animacionProducto.activa
     ) {
 
-        // Si acaba de colocar un producto en otro rack,
-        // regresar caminando al lugar donde quedó el carrito.
+     
         if (
             productoReubicadoPendiente &&
             tienePosicionClienteAntesDeReubicar
@@ -6270,8 +6252,6 @@ case ESTADOS.GUARDANDO: {
                 break;
             }
 
-            // Si no existe una ruta válida, continuar
-            // con el comportamiento habitual.
             tienePosicionClienteAntesDeReubicar = false;
 
         }
@@ -6287,18 +6267,14 @@ case ESTADOS.REGRESANDO_CARRITO: {
 
         tienePosicionClienteAntesDeReubicar = false;
 
-        // El cliente ya llegó al lugar donde dejó el carrito.
-        // El seguimiento se reanudará cuando vuelva a desplazarse.
+      
         cambiarEstado(ESTADOS.BUSCANDO);
     }
 
     break;
 }
 
-        // =========================================
-        // ESPERAR / REINTENTAR
-        // =========================================
-
+ 
         case ESTADOS.ESPERANDO: {
 
             aplicarRotacionEuler(
@@ -6346,9 +6322,6 @@ case ESTADOS.REGRESANDO_CARRITO: {
             break;
         }
 
-        // =========================================
-        // PAGAR
-        // =========================================
 
         case ESTADOS.PAGANDO: {
 
@@ -6402,10 +6375,6 @@ case ESTADOS.REGRESANDO_CARRITO: {
         case ESTADOS.FINALIZADO:
             break;
     }
-
-    // =========================================
-    // ANIMACIÓN DEL CARRITO
-    // =========================================
 
     if (
         config.carrito?.siguiendo &&
@@ -6635,6 +6604,14 @@ case ESTADOS.REGRESANDO_CARRITO: {
         iniciarRegresoVehiculo,
 
         iniciarPago: dirigirseACaja,
+
+        iniciarPagoMovil,
+
+        actualizarQRTelefono,
+
+        confirmarPagoMovil,
+
+        obtenerTicketPendiente: () => ticketPendiente,
 
         obtenerObjetivo: () => {
             return objetivo
