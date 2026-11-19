@@ -725,48 +725,107 @@ telefonoMovil = telefono;
 
 
 function actualizarQRTelefono(datosQR) {
+
     if (!telefonoMovil || !materialPantallaTelefono) {
-        console.warn('[TELEFONO] El celular todavía no está creado.');
-        return;
+        console.warn(
+            '[TELEFONO] El celular o su pantalla todavía no están preparados.'
+        );
+        return false;
     }
 
     if (!window.QRCode) {
-        console.warn('[TELEFONO] No se encontró el generador QR.');
-        return;
+        console.warn(
+            '[TELEFONO] No se encontró el generador QR.'
+        );
+        return false;
     }
 
     const contenedor = document.createElement('div');
 
+    const contenidoQR = typeof datosQR === 'string'
+        ? datosQR
+        : JSON.stringify(datosQR);
+
     new window.QRCode(contenedor, {
-        text: typeof datosQR === 'string'
-            ? datosQR
-            : JSON.stringify(datosQR),
+        text: contenidoQR,
         width: 256,
         height: 256,
         correctLevel: window.QRCode.CorrectLevel.M
     });
 
     const canvas = contenedor.querySelector('canvas');
+    const imagen = contenedor.querySelector('img');
 
-    if (!canvas) {
-        console.error('[TELEFONO] No se pudo generar el QR.');
-        return;
+    const aplicarTextura = (fuente) => {
+
+        const textura = new THREE.CanvasTexture(fuente);
+
+        textura.colorSpace = THREE.SRGBColorSpace;
+        textura.flipY = true;
+        textura.needsUpdate = true;
+
+        if (texturaQRTelefono) {
+            texturaQRTelefono.dispose();
+        }
+
+        texturaQRTelefono = textura;
+
+        materialPantallaTelefono.map = textura;
+        materialPantallaTelefono.color.set(0xffffff);
+        materialPantallaTelefono.needsUpdate = true;
+
+        console.log(
+            '[TELEFONO] Código QR aplicado correctamente.'
+        );
+
+        return true;
+    };
+
+    if (canvas) {
+        return aplicarTextura(canvas);
     }
 
-    const textura = new THREE.CanvasTexture(canvas);
+    if (imagen) {
 
-    textura.colorSpace = THREE.SRGBColorSpace;
-    textura.needsUpdate = true;
+        if (imagen.complete && imagen.naturalWidth > 0) {
+            const lienzo = document.createElement('canvas');
 
-    if (texturaQRTelefono) {
-        texturaQRTelefono.dispose();
+            lienzo.width = 256;
+            lienzo.height = 256;
+
+            const contexto = lienzo.getContext('2d');
+
+            contexto.fillStyle = '#ffffff';
+            contexto.fillRect(0, 0, 256, 256);
+            contexto.drawImage(imagen, 0, 0, 256, 256);
+
+            return aplicarTextura(lienzo);
+        }
+
+        imagen.onload = () => {
+
+            const lienzo = document.createElement('canvas');
+
+            lienzo.width = 256;
+            lienzo.height = 256;
+
+            const contexto = lienzo.getContext('2d');
+
+            contexto.fillStyle = '#ffffff';
+            contexto.fillRect(0, 0, 256, 256);
+            contexto.drawImage(imagen, 0, 0, 256, 256);
+
+            aplicarTextura(lienzo);
+        };
+
+        return true;
     }
 
-    texturaQRTelefono = textura;
+    console.error(
+        '[TELEFONO] No se pudo obtener el canvas ni la imagen del QR.'
+    );
 
-    materialPantallaTelefono.map = textura;
-    materialPantallaTelefono.color.set(0xffffff);
-    materialPantallaTelefono.needsUpdate = true;
+    return false;
 }
 
 
