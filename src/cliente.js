@@ -669,7 +669,7 @@ function crearTelefonoMovilEnMano() {
             telefono.name = 'TELEFONO_PAGO_MOVIL';
 
             // Ajustar escala del modelo
-            telefono.scale.set(1.65, 1.65, 1.65);
+            telefono.scale.set(1.95, 1.95, 1.95);
 
             // Buscar la pantalla creada en Blender
             let pantallaEncontrada = false;
@@ -698,7 +698,7 @@ function crearTelefonoMovilEnMano() {
             }
 
  // Prueba de posición y orientación
-telefono.position.set(0, 0.012, 0.08);
+telefono.position.set(0, 0.25, 0.08);
 telefono.rotation.set(0, Math.PI, 0);
 
 rig.manoDerecha.add(telefono);
@@ -6707,4 +6707,3 @@ case ESTADOS.REGRESANDO_CARRITO: {
 
     return api;
 }
-
