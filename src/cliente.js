@@ -3086,8 +3086,9 @@ productoReubicadoPendiente =
                 grupo.add(modelo);
 
                 detectarHuesos(modelo);
-                crearTelefonoMovilEnMano();
                 actualizarRig();
+                crearTelefonoMovilEnMano();
+                
 
                 if (!opciones.offsetPalmaProducto) {
                     calcularOffsetPalmaDesdeEsqueleto(
