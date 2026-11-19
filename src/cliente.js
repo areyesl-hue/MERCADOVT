@@ -698,22 +698,16 @@ function crearTelefonoMovilEnMano() {
             }
 
  // Prueba de posición y orientación
-telefono.scale.setScalar(1.5);
-
 telefono.position.set(0, 0.02, 0.08);
+telefono.rotation.set(0, Math.PI, 0);
 
-telefono.rotation.set(
-    0,
-    Math.PI,
-    0
-);
+rig.manoDerecha.add(telefono);
 
-            // Sujetar a la mano derecha
-            rig.manoDerecha.add(telefono);
+// El celular comienza oculto.
+// Solo aparece durante el estado PAGANDO.
+telefono.visible = estado === ESTADOS.PAGANDO;
 
-            telefono.visible = true;
-
-            telefonoMovil = telefono;
+telefonoMovil = telefono;
 
             console.log('[TELEFONO] Modelo cargado correctamente.');
         },
