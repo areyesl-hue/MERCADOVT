@@ -873,7 +873,7 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
         // ====================================================
 
         {
-            archivo: '/modelos/paste.glb',
+            archivo: '/modelos/Pastel.glb',
             nombre: 'Pastel de fresa',
             categoria: 'Panadería',
             tipo: 'pasteleria',
@@ -886,7 +886,7 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
         },
 
         {
-            archivo: '/modelos/pastel-choco.glb',
+            archivo: '/modelos/Pastel-Choco.glb',
             nombre: 'Pastel de chocolate',
             categoria: 'Panadería',
             tipo: 'pasteleria',
@@ -899,7 +899,7 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
         },
 
         {
-            archivo: '/modelos/pastel-zanahoria.glb',
+            archivo: '/modelos/Pastel-Zanahoria.glb',
             nombre: 'Pastel de zanahoria',
             categoria: 'Panadería',
             tipo: 'pasteleria',
@@ -917,7 +917,7 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
         // ====================================================
 
         {
-            archivo: '/modelos/bolillo.glb',
+            archivo: '/modelos/Bolillo.glb',
             nombre: 'Bolillo',
             categoria: 'Panadería',
             tipo: 'panaderia',
