@@ -881,7 +881,7 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
     y: 0.82,
     alto: 0.70,
     rotacion: 0,
-    cantidad: 3
+   
 },
 
 {
@@ -893,7 +893,7 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
     y: 1.16,
     alto: 0.70,
     rotacion: 0,
-    cantidad: 3
+   
 },
 
 {
@@ -905,7 +905,6 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
     y: 1.50,
     alto: 0.70,
     rotacion: 0,
-    cantidad: 3
 },
         {
             archivo: '/modelos/Bolillo.glb',
@@ -1116,24 +1115,23 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
                 catalogo.nombre
             );
         }
+// VITRINA DE PASTELES
+if (catalogo.tipo === 'pasteleria') {
+    return {
+        idRack: 'Vitrina_pasteles',
+        posiciones: [-0.85, 0, 0.85].map((offsetX) => ({
+            x: 25.2 + offsetX,
+            y: catalogo.y,
+            z: -20.0
+        }))
+    };
+}
 
-                // VITRINA DE PASTELES
-        if (catalogo.tipo === 'pasteleria') {
-            return {
-                idRack: 'Vitrina_pasteles',
-                posiciones: [{
-                    x: catalogo.x,
-                    y: catalogo.y,
-                    z: -20.0
-                }]
-            };
-        }
-
-        // EXHIBIDOR DE PANADERÍA
-       if (catalogo.tipo === 'panaderia') {
+// EXHIBIDOR DE PANADERÍA
+if (catalogo.tipo === 'panaderia') {
     return {
         idRack: 'Exhibidor_panaderia',
-        posiciones: [-0.85, 0, 0.85].map((offsetX) => ({
+        posiciones: [-1.25, 0, 1.25].map((offsetX) => ({
             x: 25.2 + offsetX,
             y: catalogo.y,
             z: -15.5
