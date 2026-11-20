@@ -983,6 +983,38 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
             alto: 0.30,
             rotacion: 0
         },
+        {
+    archivo: '/modelos/Pañales.glb',
+    nombre: 'Pañales para bebé',
+    categoria: 'Higiene',
+    tipo: 'higiene',
+    x: 0,
+    y: 0.65,
+    alto: 0.45,
+    rotacion: 0
+},
+
+{
+    archivo: '/modelos/Talco.glb',
+    nombre: 'Talco para bebé',
+    categoria: 'Higiene',
+    tipo: 'higiene',
+    x: 0,
+    y: 0.95,
+    alto: 0.30,
+    rotacion: 0
+},
+
+{
+    archivo: '/modelos/Shampoo-Bebe.glb',
+    nombre: 'Shampoo para bebé',
+    categoria: 'Higiene',
+    tipo: 'higiene',
+    x: 0,
+    y: 1.25,
+    alto: 0.35,
+    rotacion: 0
+},
         { archivo: '/modelos/Aceite.glb', nombre: 'Aceite', categoria: 'Abarrotes', tipo: 'gondola', alto: 0.36, ancho: 0.26, profundidad: 0.26 },
         { archivo: '/modelos/Atun.glb', nombre: 'Atún', categoria: 'Enlatados', tipo: 'gondola', alto: 0.28, ancho: 0.34, profundidad: 0.30 },
         { archivo: '/modelos/Azucar.glb', nombre: 'Azúcar', categoria: 'Abarrotes', tipo: 'gondola', alto: 0.32, ancho: 0.38, profundidad: 0.34 },
