@@ -748,8 +748,8 @@ function actualizarQRTelefono(datosQR) {
 
     new window.QRCode(contenedor, {
         text: contenidoQR,
-        width: 256,
-        height: 256,
+        width: 128,
+        height: 128,
         correctLevel: window.QRCode.CorrectLevel.M
     });
 
