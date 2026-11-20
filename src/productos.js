@@ -868,54 +868,45 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
 }
 
     const catalogoProductosAdicionales = [
-                // ====================================================
-        // PASTELES
-        // ====================================================
+          // ====================================================
+// PASTELES: 3 POR NIVEL
+// ====================================================
 
-        {
-            archivo: '/modelos/Pastel.glb',
-            nombre: 'Pastel de fresa',
-            categoria: 'Panadería',
-            tipo: 'pasteleria',
-            x: 24.45,
-            y: 0.82,
-            alto: 0.70,
-            ancho: 0.60,
-            profundidad: 0.60,
-            rotacion: 0
-        },
+{
+    archivo: '/modelos/paste.glb',
+    nombre: 'Pastel de fresa',
+    categoria: 'Panadería',
+    tipo: 'pasteleria',
+    x: 0,
+    y: 0.82,
+    alto: 0.70,
+    rotacion: 0,
+    cantidad: 3
+},
 
-        {
-            archivo: '/modelos/Pastel-Choco.glb',
-            nombre: 'Pastel de chocolate',
-            categoria: 'Panadería',
-            tipo: 'pasteleria',
-            x: 25.95,
-            y: 1.16,
-            alto: 0.70,
-            ancho: 0.60,
-            profundidad: 0.60,
-            rotacion: 0
-        },
+{
+    archivo: '/modelos/pastel-choco.glb',
+    nombre: 'Pastel de chocolate',
+    categoria: 'Panadería',
+    tipo: 'pasteleria',
+    x: 0,
+    y: 1.16,
+    alto: 0.70,
+    rotacion: 0,
+    cantidad: 3
+},
 
-        {
-            archivo: '/modelos/Pastel-Zanahoria.glb',
-            nombre: 'Pastel de zanahoria',
-            categoria: 'Panadería',
-            tipo: 'pasteleria',
-            x: 24.45,
-            y: 1.50,
-            alto: 0.70,
-            ancho: 0.60,
-            profundidad: 0.60,
-            rotacion: 0
-        },
-
-
-        // ====================================================
-        // PANADERÍA
-        // ====================================================
-
+{
+    archivo: '/modelos/pastel-zanahoria.glb',
+    nombre: 'Pastel de zanahoria',
+    categoria: 'Panadería',
+    tipo: 'pasteleria',
+    x: 0,
+    y: 1.50,
+    alto: 0.70,
+    rotacion: 0,
+    cantidad: 3
+},
         {
             archivo: '/modelos/Bolillo.glb',
             nombre: 'Bolillo',
@@ -1139,16 +1130,16 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
         }
 
         // EXHIBIDOR DE PANADERÍA
-        if (catalogo.tipo === 'panaderia') {
-            return {
-                idRack: 'Exhibidor_panaderia',
-                posiciones: [{
-                    x: catalogo.x,
-                    y: catalogo.y,
-                    z: -15.5
-                }]
-            };
-        }
+       if (catalogo.tipo === 'panaderia') {
+    return {
+        idRack: 'Exhibidor_panaderia',
+        posiciones: [-0.85, 0, 0.85].map((offsetX) => ({
+            x: 25.2 + offsetX,
+            y: catalogo.y,
+            z: -15.5
+        }))
+    };
+}
 
         if (catalogo.tipo === 'mostrador') {
             const indice = siguienteMostrador++;
