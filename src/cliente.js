@@ -698,7 +698,7 @@ function crearTelefonoMovilEnMano() {
             }
 
  // Prueba de posición y orientación
-telefono.position.set(0, 0.25, 0.08);
+telefono.position.set(0, 0.12, 0.12);
 telefono.rotation.set(0, Math.PI, 0);
 
 rig.manoDerecha.add(telefono);
