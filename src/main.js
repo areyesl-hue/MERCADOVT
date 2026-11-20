@@ -1188,17 +1188,32 @@ function obtenerComprasCliente(cliente) {
 }
 
 
+
 function actualizarFasesVisitantes(delta) {
+
     for (const visita of visitantesPorVehiculo.values()) {
+
         const cliente = visita.cliente;
 
         if (!cliente || cliente.eliminado) continue;
 
+        const estado = String(
+            obtenerEstadoCliente(cliente) ?? ''
+        ).toUpperCase();
+
+        // ==========================================
+        // REINTENTAR INICIO DEL PAGO
+        // ==========================================
+
         if (visita.fase === 'esperandoCaja') {
+
             visita.tiempoEsperaCaja =
                 (visita.tiempoEsperaCaja ?? 0) + delta;
 
-            if (visita.tiempoEsperaCaja >= INTERVALO_REINTENTO_CAJA) {
+            if (
+                visita.tiempoEsperaCaja >= INTERVALO_REINTENTO_CAJA &&
+                !visita.pagoSolicitado
+            ) {
                 visita.tiempoEsperaCaja = 0;
                 iniciarPagoVisitante(visita);
             }
@@ -1206,13 +1221,34 @@ function actualizarFasesVisitantes(delta) {
             continue;
         }
 
+        // ==========================================
+        // DETECTAR CLIENTE PREPARANDO PAGO
+        // ==========================================
+
+        if (
+            estado === 'PREPARANDO_PAGO' &&
+            !visita.pagoSolicitado
+        ) {
+
+            if (obtenerComprasCliente(cliente).length === 0) {
+                iniciarRegresoVisitante(visita);
+                continue;
+            }
+
+            iniciarPagoVisitante(visita);
+            continue;
+        }
+
+        // ==========================================
+        // SOLAMENTE PROCESAR CLIENTES COMPRANDO
+        // ==========================================
+
         if (visita.fase !== 'comprando') continue;
         if (visita.pagoSolicitado) continue;
 
         visita.tiempo += delta;
 
         const compras = obtenerComprasCliente(cliente);
-        const estado = obtenerEstadoCliente(cliente);
 
         const maximoComprado =
             compras.length >= CONFIG.maximoProductosCliente;
@@ -1220,21 +1256,30 @@ function actualizarFasesVisitantes(delta) {
         const tiempoAgotado =
             visita.tiempo >= CONFIG.tiempoCompraAuto;
 
-        if (estado === 'caja' && !visita.pagoSolicitado) {
+        // Compatibilidad con el estado anterior de caja.
+        if (estado === 'CAJA') {
             iniciarPagoVisitante(visita);
             continue;
         }
 
+        // Si sigue recogiendo o examinando productos,
+        // esperamos a que termine.
         if (
             clienteEstaOcupadoComprando(estado) &&
-            !maximoComprado
+            !maximoComprado &&
+            !tiempoAgotado
         ) {
             continue;
         }
 
         if (!maximoComprado && !tiempoAgotado) continue;
 
+        // ==========================================
+        // CLIENTE SIN PRODUCTOS
+        // ==========================================
+
         if (compras.length === 0) {
+
             mostrarMensaje(
                 `${visita.nombreCliente} no encontró productos y regresará a su vehículo.`
             );
@@ -1243,12 +1288,22 @@ function actualizarFasesVisitantes(delta) {
             continue;
         }
 
-        visita.pagoSolicitado = true;
+        // ==========================================
+        // INICIAR PAGO MÓVIL
+        // ==========================================
+
+        // No establecer pagoSolicitado aquí.
+        // iniciarPagoVisitante() lo establece internamente.
 
         iniciarPagoVisitante(visita);
     }
 
+    // ==========================================
+    // PROCESAR SALIDAS DE VEHÍCULOS
+    // ==========================================
+
     for (const visita of visitantesPorVehiculo.values()) {
+
         if (visita.fase !== 'esperandoSalida') continue;
         if (visita.salidaSolicitada) continue;
 
@@ -1259,6 +1314,7 @@ function actualizarFasesVisitantes(delta) {
         }
     }
 }
+
 
 
 
