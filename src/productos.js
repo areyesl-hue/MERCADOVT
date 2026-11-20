@@ -32,10 +32,6 @@ export function crearProductosLacteos(scene) {
     const unidades = [];
     const unidadesPorId = new Map();
 
-    // ========================================================
-    // CARGAR MODELOS GLB
-    // ========================================================
-
     function cargarModelo(archivo, nombre, callback) {
         const existente = cacheModelos.get(archivo);
 
@@ -94,10 +90,6 @@ export function crearProductosLacteos(scene) {
         );
     }
 
-    // ========================================================
-    // DETECTAR MALLAS
-    // ========================================================
-
     function contieneMallas(objeto) {
         let encontrado = false;
 
@@ -107,10 +99,6 @@ export function crearProductosLacteos(scene) {
 
         return encontrado;
     }
-
-    // ========================================================
-    // DETECTAR GRUPOS INDEPENDIENTES
-    // ========================================================
 
     function obtenerGruposProducto(original) {
         original.updateMatrixWorld(true);
@@ -146,10 +134,6 @@ export function crearProductosLacteos(scene) {
 
         return grupos;
     }
-
-    // ========================================================
-    // COMPACTAR MALLAS ESTÁTICAS
-    // ========================================================
 
     function compactarMallasFuente(fuente) {
         fuente.updateMatrixWorld(true);
@@ -296,10 +280,6 @@ export function crearProductosLacteos(scene) {
         fuente.updateMatrixWorld(true);
     }
 
-    // ========================================================
-    // CREAR FUENTES INDEPENDIENTES
-    // ========================================================
-
     function crearFuentesIndependientes(original) {
         original.updateMatrixWorld(true);
 
@@ -353,10 +333,6 @@ export function crearProductosLacteos(scene) {
         });
     }
 
-    // ========================================================
-    // IDENTIFICADORES Y PRECIOS
-    // ========================================================
-
     function obtenerCodigoCatalogo(nombreUnidad) {
         return nombreUnidad
             .replace(/_N\d+_\d+$/, '')
@@ -374,10 +350,6 @@ export function crearProductosLacteos(scene) {
 
         return 0;
     }
-
-    // ========================================================
-    // OBTENER DIMENSIONES
-    // ========================================================
 
     function obtenerDimensionesFuente(fuente) {
         let dimensiones = cacheDimensiones.get(fuente);
@@ -401,10 +373,6 @@ export function crearProductosLacteos(scene) {
 
         return dimensiones;
     }
-
-    // ========================================================
-    // CREAR UNIDAD DE PRODUCTO
-    // ========================================================
 
     function crearCopia(
         fuente,
@@ -576,10 +544,6 @@ export function crearProductosLacteos(scene) {
         return modelo;
     }
 
-    // ========================================================
-    // PLÁTANOS
-    // ========================================================
-
     const posicionesPlatanos = [
         [-1.25, -0.62],
         [-0.625, -0.62],
@@ -640,10 +604,6 @@ export function crearProductosLacteos(scene) {
             );
         }
     );
-
-    // ========================================================
-    // GÓNDOLAS
-    // ========================================================
 
     const gondolas = [
         [-17, -13], [-17, 0], [-17, 13],
@@ -708,10 +668,6 @@ export function crearProductosLacteos(scene) {
         };
     }
 
-    // ========================================================
-    // MESAS DE FRUTAS Y VERDURAS
-    // ========================================================
-
     const mesasFrutas = [
         { x: -25.5, z: 15, rack: 'Mesa_frescos_01' },
         { x: -21.7, z: 15, rack: 'Mesa_frescos_02' },
@@ -760,10 +716,6 @@ export function crearProductosLacteos(scene) {
             }))
         };
     }
-
-    // ========================================================
-    // REFRIGERADORES
-    // ========================================================
 
     const refrigeradoresX = [
         -27,
@@ -841,10 +793,6 @@ export function crearProductosLacteos(scene) {
         };
     }
 
-    // ========================================================
-    // MÓDULOS DE LIMPIEZA E HIGIENE
-    // ========================================================
-
     const nivelesHigiene = [
         0.47,
         0.82,
@@ -865,7 +813,6 @@ export function crearProductosLacteos(scene) {
 function obtenerPosicionesHigiene(categoria, nombre = '') {
     const nombreNormalizado = String(nombre).toLowerCase();
 
-    // Papel higiénico y toallitas comparten el mismo rack.
     const esPapel =
         nombreNormalizado.includes('papel') ||
         nombreNormalizado.includes('higienico');
@@ -890,7 +837,6 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
         };
     }
 
-    // Tres columnas y cinco niveles.
     const niveles = [0.47, 0.82, 1.17, 1.52, 1.87];
     const offsetsX = [-0.75, 0, 0.75];
 
@@ -921,11 +867,131 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
     };
 }
 
-    // ========================================================
-    // CATÁLOGO DE PRODUCTOS
-    // ========================================================
-
     const catalogoProductosAdicionales = [
+                // ====================================================
+        // PASTELES
+        // ====================================================
+
+        {
+            archivo: '/modelos/paste.glb',
+            nombre: 'Pastel de fresa',
+            categoria: 'Panadería',
+            tipo: 'pasteleria',
+            x: 24.45,
+            y: 0.82,
+            alto: 0.70,
+            ancho: 0.60,
+            profundidad: 0.60,
+            rotacion: 0
+        },
+
+        {
+            archivo: '/modelos/pastel-choco.glb',
+            nombre: 'Pastel de chocolate',
+            categoria: 'Panadería',
+            tipo: 'pasteleria',
+            x: 25.95,
+            y: 1.16,
+            alto: 0.70,
+            ancho: 0.60,
+            profundidad: 0.60,
+            rotacion: 0
+        },
+
+        {
+            archivo: '/modelos/pastel-zanahoria.glb',
+            nombre: 'Pastel de zanahoria',
+            categoria: 'Panadería',
+            tipo: 'pasteleria',
+            x: 24.45,
+            y: 1.50,
+            alto: 0.70,
+            ancho: 0.60,
+            profundidad: 0.60,
+            rotacion: 0
+        },
+
+
+        // ====================================================
+        // PANADERÍA
+        // ====================================================
+
+        {
+            archivo: '/modelos/bolillo.glb',
+            nombre: 'Bolillo',
+            categoria: 'Panadería',
+            tipo: 'panaderia',
+            x: 24.35,
+            y: 0.76,
+            alto: 0.35,
+            rotacion: 0
+        },
+
+        {
+            archivo: '/modelos/Teleras.glb',
+            nombre: 'Telera',
+            categoria: 'Panadería',
+            tipo: 'panaderia',
+            x: 26.05,
+            y: 0.76,
+            alto: 0.35,
+            rotacion: 0
+        },
+
+        {
+            archivo: '/modelos/PanCaja.glb',
+            nombre: 'Pan de caja',
+            categoria: 'Panadería',
+            tipo: 'panaderia',
+            x: 24.15,
+            y: 1.26,
+            alto: 0.40,
+            rotacion: 0
+        },
+
+        {
+            archivo: '/modelos/ConchaVainilla.glb',
+            nombre: 'Concha de vainilla',
+            categoria: 'Panadería',
+            tipo: 'panaderia',
+            x: 25.20,
+            y: 1.26,
+            alto: 0.30,
+            rotacion: 0
+        },
+
+        {
+            archivo: '/modelos/ConchaFresa.glb',
+            nombre: 'Concha de fresa',
+            categoria: 'Panadería',
+            tipo: 'panaderia',
+            x: 26.25,
+            y: 1.26,
+            alto: 0.30,
+            rotacion: 0
+        },
+
+        {
+            archivo: '/modelos/Baguette.glb',
+            nombre: 'Baguette',
+            categoria: 'Panadería',
+            tipo: 'panaderia',
+            x: 24.35,
+            y: 1.76,
+            alto: 0.45,
+            rotacion: 0
+        },
+
+        {
+            archivo: '/modelos/ConchaChocolate.glb',
+            nombre: 'Concha de chocolate',
+            categoria: 'Panadería',
+            tipo: 'panaderia',
+            x: 26.05,
+            y: 1.76,
+            alto: 0.30,
+            rotacion: 0
+        },
         { archivo: '/modelos/Aceite.glb', nombre: 'Aceite', categoria: 'Abarrotes', tipo: 'gondola', alto: 0.36, ancho: 0.26, profundidad: 0.26 },
         { archivo: '/modelos/Atun.glb', nombre: 'Atún', categoria: 'Enlatados', tipo: 'gondola', alto: 0.28, ancho: 0.34, profundidad: 0.30 },
         { archivo: '/modelos/Azucar.glb', nombre: 'Azúcar', categoria: 'Abarrotes', tipo: 'gondola', alto: 0.32, ancho: 0.38, profundidad: 0.34 },
@@ -956,10 +1022,10 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
         { archivo: '/modelos/desodorante.glb', nombre: 'Desodorante', categoria: 'Higiene personal', tipo: 'gondola', alto: 0.30, ancho: 0.15, profundidad: 0.15 },
         { archivo: '/modelos/shampooGold.glb', nombre: 'Shampoo Gold', categoria: 'Higiene personal', tipo: 'gondola', alto: 0.34, ancho: 0.20, profundidad: 0.14 },
 
-        // AGUA
+      
         { archivo: '/modelos/Agua.glb', nombre: 'Agua', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 7, nivel: 0, alto: 0.43, ancho: 0.25, profundidad: 0.25 },
 
-        // LÁCTEOS
+        
         { archivo: '/modelos/Lala.glb', nombre: 'Lala', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 0, nivel: 0, alto: 0.38, ancho: 0.30, profundidad: 0.26 },
         { archivo: '/modelos/Pepsi. y coca.glb', nombre: 'Pepsi y Coca', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 2, nivel: 1, alto: 0.42, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/Pepsi.glb', nombre: 'Pepsi', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 2, nivel: 2, alto: 0.42, ancho: 0.24, profundidad: 0.24 },
@@ -967,25 +1033,20 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
         { archivo: '/modelos/cocacola.glb', nombre: 'Coca-Cola', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 2, nivel: 3, alto: 0.42, ancho: 0.24, profundidad: 0.24 },
         { archivo: '/modelos/nesquik.glb', nombre: 'Nesquik', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 0, nivel: 2, alto: 0.38, ancho: 0.30, profundidad: 0.26 },
 
-        // FANTA
         { archivo: '/modelos/Fanta.glb', nombre: 'Fanta', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 3, nivel: 0, alto: 0.42, ancho: 0.24, profundidad: 0.24 },
         { archivo: '/modelos/FantaFresa.glb', nombre: 'Fanta Fresa', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 3, nivel: 1, alto: 0.42, ancho: 0.24, profundidad: 0.24 },
         { archivo: '/modelos/FantaUva.glb', nombre: 'Fanta Uva', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 3, nivel: 2, alto: 0.42, ancho: 0.24, profundidad: 0.24 },
 
-        // MONSTER
         { archivo: '/modelos/Monster.glb', nombre: 'Monster', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 5, nivel: 0, alto: 0.38, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/MonsterBlanca.glb', nombre: 'Monster Blanca', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 5, nivel: 1, alto: 0.38, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/MonsterRosa.glb', nombre: 'Monster Rosa', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 5, nivel: 2, alto: 0.38, ancho: 0.22, profundidad: 0.22 },
 
-        // FRUTAS Y VERDURAS
         { archivo: '/modelos/Brocoli.glb', nombre: 'Brocoli', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 0, alto: 0.28, ancho: 0.30, profundidad: 0.28 },
 
-        // ELOTE EN GÓNDOLA DE FRUTAS Y VERDURAS
         { archivo: '/modelos/Elote.glb', nombre: 'Elote', categoria: 'Frutas y verduras', tipo: 'gondola', alto: 0.30, ancho: 0.24, profundidad: 0.24 },
 
         { archivo: '/modelos/Limon.glb', nombre: 'Limon', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 0, alto: 0.20, ancho: 0.20, profundidad: 0.20 },
 
-        // JALAPEÑO EN GÓNDOLA DE FRUTAS Y VERDURAS
         { archivo: '/modelos/Jalapeño.glb', nombre: 'Jalapeno', categoria: 'Frutas y verduras', tipo: 'gondola', alto: 0.20, ancho: 0.20, profundidad: 0.20 },
 
         { archivo: '/modelos/Mazana.glb', nombre: 'Manzana', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.22, ancho: 0.22, profundidad: 0.22 },
@@ -998,20 +1059,15 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
         { archivo: '/modelos/LechePura.glb', nombre: 'Leche Pura', categoria: 'Lacteos', tipo: 'refrigerador', refrigerador: 1, nivel: 0, alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/Naranja.glb', nombre: 'Naranja', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 3, alto: 0.28, ancho: 0.28, profundidad: 0.28 },
 
-        // PIÑA EN LA MESA DONDE ESTABA EL JALAPEÑO
         { archivo: '/modelos/PIÑA.glb', nombre: 'Piña', categoria: 'Frutas y verduras', tipo: 'mesa', mesa: 2, alto: 0.42, ancho: 0.38, profundidad: 0.38 },
 
-        // CARNICERÍA
+     
         { archivo: '/modelos/costilla.glb', nombre: 'Costilla', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.30, ancho: 0.38, profundidad: 0.32 },
         { archivo: '/modelos/salchichas.glb', nombre: 'Salchichas', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.28, ancho: 0.38, profundidad: 0.30 },
 
-        // JUGOS
+      
         { archivo: '/modelos/Limonada.glb', nombre: 'Limonada', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 7, nivel: 1, alto: 0.40, ancho: 0.24, profundidad: 0.24 },
         { archivo: '/modelos/Naranjada.glb', nombre: 'Naranjada', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 7, nivel: 2, alto: 0.40, ancho: 0.24, profundidad: 0.24 },
-
-        // ====================================================
-        // REFRIGERADOR EXCLUSIVO DE CERVEZAS: X = 23.5
-        // ====================================================
 
         { archivo: '/modelos/Cerveza Lager.glb', nombre: 'Cerveza Lager', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 6, nivel: 0, columna: 0, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/Cerveza XX.glb', nombre: 'Cerveza XX', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 6, nivel: 0, columna: 1, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
@@ -1020,22 +1076,20 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
         { archivo: '/modelos/Carta Blanca.glb', nombre: 'Carta Blanca', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 6, nivel: 2, columna: 0, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
         { archivo: '/modelos/Tecate.glb', nombre: 'Tecate', categoria: 'Bebidas', tipo: 'refrigerador', refrigerador: 6, nivel: 2, columna: 1, alto: 0.36, ancho: 0.22, profundidad: 0.22 },
 
-        // LIMPIEZA
+       
         { archivo: '/modelos/cloro_liquido.glb', nombre: 'Cloro liquido', categoria: 'Limpieza', tipo: 'higiene', alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/detergente_liquido.glb', nombre: 'Detergente liquido', categoria: 'Limpieza', tipo: 'higiene', alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/detergente_liquido1.glb', nombre: 'Detergente liquido 2', categoria: 'Limpieza', tipo: 'higiene', alto: 0.38, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/limpiador_multiusos.glb', nombre: 'Limpiador multiusos', categoria: 'Limpieza', tipo: 'higiene', alto: 0.36, ancho: 0.28, profundidad: 0.25 },
         { archivo: '/modelos/suavizante_liquido.glb', nombre: 'Suavizante', categoria: 'Limpieza', tipo: 'higiene', alto: 0.38, ancho: 0.28, profundidad: 0.25 },
 
-        // HIGIENE: PAPEL Y TOALLITAS EN SUS RACKS
         { archivo: '/modelos/papel.glb', nombre: 'Papel', categoria: 'Higiene', tipo: 'higiene', alto: 0.34, ancho: 0.30, profundidad: 0.28 },
         { archivo: '/modelos/toallitas_bebe.glb', nombre: 'Toallitas para bebe', categoria: 'Higiene', tipo: 'higiene', alto: 0.28, ancho: 0.30, profundidad: 0.24 },
 
-        // CARNICERÍA
+     
         { archivo: '/modelos/Filete.glb', nombre: 'Filete', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.24, ancho: 0.32, profundidad: 0.28 },
         { archivo: '/modelos/Pollo.glb', nombre: 'Pollo', categoria: 'Carniceria', tipo: 'mostrador', alto: 0.28, ancho: 0.34, profundidad: 0.30 },
 
-        // ROPA
         { archivo: '/modelos/Blusa.glb', nombre: 'Blusa', categoria: 'Ropa', tipo: 'ropa', alto: 0.72, ancho: 0.42, profundidad: 0.24 },
         { archivo: '/modelos/SudaderaNegra.glb', nombre: 'Sudadera negra', categoria: 'Ropa', tipo: 'ropa', alto: 0.72, ancho: 0.42, profundidad: 0.24 },
         { archivo: '/modelos/camisaAzul.glb', nombre: 'Camisa azul', categoria: 'Ropa', tipo: 'ropa', alto: 0.72, ancho: 0.42, profundidad: 0.24 },
@@ -1044,10 +1098,6 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
         { archivo: '/modelos/sudaderaroja.glb', nombre: 'Sudadera roja', categoria: 'Ropa', tipo: 'ropa', alto: 0.72, ancho: 0.42, profundidad: 0.24 },
         { archivo: '/modelos/vesitdo.glb', nombre: 'Vestido', categoria: 'Ropa', tipo: 'ropa', alto: 0.72, ancho: 0.42, profundidad: 0.24 }
     ];
-
-    // ========================================================
-    // UBICACIÓN DE PRODUCTOS
-    // ========================================================
 
     let siguientePerchero = 0;
     let siguienteMostrador = 0;
@@ -1074,6 +1124,30 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
                 catalogo.categoria,
                 catalogo.nombre
             );
+        }
+
+                // VITRINA DE PASTELES
+        if (catalogo.tipo === 'pasteleria') {
+            return {
+                idRack: 'Vitrina_pasteles',
+                posiciones: [{
+                    x: catalogo.x,
+                    y: catalogo.y,
+                    z: -20.0
+                }]
+            };
+        }
+
+        // EXHIBIDOR DE PANADERÍA
+        if (catalogo.tipo === 'panaderia') {
+            return {
+                idRack: 'Exhibidor_panaderia',
+                posiciones: [{
+                    x: catalogo.x,
+                    y: catalogo.y,
+                    z: -15.5
+                }]
+            };
         }
 
         if (catalogo.tipo === 'mostrador') {
@@ -1136,10 +1210,6 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
         };
     }
 
-    // ========================================================
-    // COLOCAR PRODUCTOS
-    // ========================================================
-
     function colocarCatalogoProductos(catalogo) {
         const ubicacion = obtenerUbicacion(catalogo);
 
@@ -1201,10 +1271,6 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
     catalogoProductosAdicionales.forEach(
         colocarCatalogoProductos
     );
-
-    // ========================================================
-    // CONSULTAS PARA CLIENTES Y VENTAS
-    // ========================================================
 
     productos.userData.obtenerResumen = () => ({
         modelosCargados,
@@ -1303,10 +1369,6 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
     productos.userData.obtenerPrecio = (codigo) => {
         return PRECIOS[codigo] ?? 0;
     };
-
-    // ========================================================
-    // INFORMACIÓN DE INICIO
-    // ========================================================
 
     console.info(
         'Catálogo del supermercado iniciado. Los 15 plátanos tienen precio de $8 MXN; los demás productos requieren precio configurado en PRECIOS.'
