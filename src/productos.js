@@ -873,7 +873,7 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
 // ====================================================
 
 {
-    archivo: '/modelos/paste.glb',
+    archivo: '/modelos/Pastel.glb',
     nombre: 'Pastel de fresa',
     categoria: 'Panadería',
     tipo: 'pasteleria',
@@ -881,11 +881,11 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
     y: 0.82,
     alto: 0.70,
     rotacion: 0,
-   
+    cantidad: 3
 },
 
 {
-    archivo: '/modelos/pastel-choco.glb',
+    archivo: '/modelos/Pastel-Choco.glb',
     nombre: 'Pastel de chocolate',
     categoria: 'Panadería',
     tipo: 'pasteleria',
@@ -893,11 +893,11 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
     y: 1.16,
     alto: 0.70,
     rotacion: 0,
-   
+    cantidad: 3
 },
 
 {
-    archivo: '/modelos/pastel-zanahoria.glb',
+    archivo: '/modelos/Pastel-Zanahoria.glb',
     nombre: 'Pastel de zanahoria',
     categoria: 'Panadería',
     tipo: 'pasteleria',
@@ -905,6 +905,7 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
     y: 1.50,
     alto: 0.70,
     rotacion: 0,
+    cantidad: 3
 },
         {
             archivo: '/modelos/Bolillo.glb',
@@ -1119,7 +1120,7 @@ function obtenerPosicionesHigiene(categoria, nombre = '') {
 if (catalogo.tipo === 'pasteleria') {
     return {
         idRack: 'Vitrina_pasteles',
-        posiciones: [-0.85, 0, 0.85].map((offsetX) => ({
+        posiciones: [-0.85, 0, 0.85].map(offsetX => ({
             x: 25.2 + offsetX,
             y: catalogo.y,
             z: -20.0
@@ -1127,14 +1128,13 @@ if (catalogo.tipo === 'pasteleria') {
     };
 }
 
-// EXHIBIDOR DE PANADERÍA
 if (catalogo.tipo === 'panaderia') {
     return {
         idRack: 'Exhibidor_panaderia',
-        posiciones: [-1.25, 0, 1.25].map((offsetX) => ({
-            x: 25.2 + offsetX,
+        posiciones: [-0.42, 0, 0.42].map(offsetZ => ({
+            x: catalogo.x,
             y: catalogo.y,
-            z: -15.5
+            z: -15.5 + offsetZ
         }))
     };
 }
