@@ -3290,33 +3290,36 @@ function estaCaminando() {
     );
 }
  
+
+
 function cambiarEstado(nuevoEstado) {
+
     if (estado === nuevoEstado) return;
 
     const anterior = estado;
 
     estado = nuevoEstado;
     tiempoEstado = 0;
+
+    // El celular solamente aparece durante el pago.
     if (telefonoMovil) {
-    telefonoMovil.visible = nuevoEstado === ESTADOS.PAGANDO;
-}
+        telefonoMovil.visible =
+            nuevoEstado === ESTADOS.PAGANDO;
+    }
 
-if (nuevoEstado === ESTADOS.GUARDANDO) {
+    // Reiniciar animación de depósito.
+    if (nuevoEstado === ESTADOS.GUARDANDO) {
 
-    animacionDeposito.preparada = false;
+        animacionDeposito.preparada = false;
+        animacionDeposito.fase = 'PREPARAR';
+        animacionDeposito.liberado = false;
+        animacionDeposito.completada = false;
+        animacionDeposito.error = false;
+        animacionDeposito.finalizado = false;
+        animacionDeposito.compra = null;
+        animacionDeposito.progresoDescenso = 0;
+    }
 
-    animacionDeposito.fase = 'PREPARAR';
-
-    animacionDeposito.liberado = false;
-    animacionDeposito.completada = false;
-    animacionDeposito.error = false;
-
-    animacionDeposito.finalizado = false;
-
-    animacionDeposito.compra = null;
-
-    animacionDeposito.progresoDescenso = 0;
-}
     console.log('[CAMBIO DE ESTADO CLIENTE]', {
         anterior,
         nuevo: nuevoEstado,
@@ -3336,11 +3339,7 @@ if (nuevoEstado === ESTADOS.GUARDANDO) {
         poseAgarreInspeccion.huesos.length = 0;
     }
 
-    console.log('[ACTUALIZANDO CARRITO POR CAMBIO DE ESTADO]', {
-        estado,
-        ladoAgarre
-    });
-
+    // Mantener actualizado el seguimiento del carrito.
     actualizarSeguimientoCarrito();
 
     intentosMovimiento = 0;
@@ -3364,14 +3363,19 @@ if (nuevoEstado === ESTADOS.GUARDANDO) {
     ].includes(estado);
 
     if (caminando) {
+
         const usaGLB = activarCaminarGLB();
 
         if (!usaGLB) {
             detenerAccionesGLB();
         }
+
     } else if (animacionProcedural) {
+
         detenerAccionesGLB();
+
     } else {
+
         detenerAccionesGLB();
         activarReposoGLB();
     }
@@ -3385,19 +3389,25 @@ if (nuevoEstado === ESTADOS.GUARDANDO) {
         restaurarPoseCompleta();
     }
 
+    // Avisar a main.js del cambio de estado.
     try {
+
         config.alCambiarEstado?.({
             cliente: api,
             anterior,
             estado: nuevoEstado
         });
+
     } catch (error) {
+
         console.error(
             '[ERROR AL CAMBIAR ESTADO CLIENTE]',
             error
         );
     }
 }
+
+
 
 
     let obstaculosCache = [];
@@ -5442,7 +5452,14 @@ function iniciarPagoMovil(callback = null) {
         return false;
     }
 
-    if (estado === ESTADOS.PAGANDO) {
+    // Si ya existe un ticket, no generar otro.
+    if (ticketPendiente && !pagoMovilConfirmado) {
+
+        callbackPagoMovil =
+            typeof callback === 'function'
+                ? callback
+                : callbackPagoMovil;
+
         return ticketPendiente;
     }
 
@@ -5450,6 +5467,10 @@ function iniciarPagoMovil(callback = null) {
         typeof callback === 'function' ? callback : null;
 
     pagoMovilConfirmado = false;
+
+    // ==========================================
+    // GENERAR PRODUCTOS DEL TICKET
+    // ==========================================
 
     const productos = compras.map(compra => ({
         nombre: compra.nombre || 'Producto',
@@ -5472,46 +5493,69 @@ function iniciarPagoMovil(callback = null) {
         total
     };
 
-const puntoPago = obtenerPuntoPreparacionPago();
-
-if (puntoPago) {
-
-    const pudoMoverse = establecerObjetivo(
-        puntoPago,
-        ESTADOS.PREPARANDO_PAGO
+    console.log(
+        '[TICKET DE PAGO MOVIL]',
+        ticketPendiente
     );
 
-    if (!pudoMoverse) {
-        cambiarEstado(ESTADOS.PAGANDO);
+    // ==========================================
+    // CONSERVAR EL DESPLAZAMIENTO ACTUAL
+    // ==========================================
+
+    if (estado === ESTADOS.PAGANDO) {
+        return ticketPendiente;
     }
 
-} else {
+    if (estado === ESTADOS.PREPARANDO_PAGO) {
+        // Ya está caminando hacia la zona de pago.
+        // No reiniciar su ruta.
+        return ticketPendiente;
+    }
 
-    console.warn(
-        `[CLIENTE ${id}] No encontró un espacio libre para pagar.`
-    );
+    // ==========================================
+    // BUSCAR ZONA DESPEJADA
+    // ==========================================
 
-    cambiarEstado(ESTADOS.PAGANDO);
-}
+    const puntoPago = obtenerPuntoPreparacionPago();
 
-    console.log('[TICKET DE PAGO MOVIL]', ticketPendiente);
+    if (puntoPago) {
+
+        const pudoMoverse = establecerObjetivo(
+            puntoPago,
+            ESTADOS.PREPARANDO_PAGO
+        );
+
+        if (!pudoMoverse) {
+            console.warn(
+                `[CLIENTE ${id}] No pudo iniciar la ruta de pago.`
+            );
+
+            cambiarEstado(ESTADOS.PAGANDO);
+        }
+
+    } else {
+
+        console.warn(
+            `[CLIENTE ${id}] No encontró un espacio libre para pagar.`
+        );
+
+        cambiarEstado(ESTADOS.PAGANDO);
+    }
 
     return ticketPendiente;
 }
 
 
+
 function confirmarPagoMovil(folio) {
 
-    if (estado !== ESTADOS.PAGANDO) {
-        return false;
-    }
+    if (estado !== ESTADOS.PAGANDO) return false;
 
     if (!ticketPendiente || pagoMovilConfirmado) {
         return false;
     }
 
     if (ticketPendiente.folio !== folio) {
-        console.warn('[PAGO MOVIL] Folio incorrecto.');
         return false;
     }
 
@@ -5520,19 +5564,22 @@ function confirmarPagoMovil(folio) {
     ticketPendiente.pagado = true;
     ticketPendiente.fechaPago = new Date().toISOString();
 
-    console.log('[PAGO MOVIL CONFIRMADO]', ticketPendiente);
-
     const callback = callbackPagoMovil;
     callbackPagoMovil = null;
 
+    console.log(
+        `[CLIENTE ${id}] Pago móvil confirmado.`
+    );
+
+    // Notificar a main.js para guardar el ticket
+    // e iniciar el regreso.
     if (callback) {
         callback(ticketPendiente);
     }
 
-    cambiarEstado(ESTADOS.FINALIZADO);
-
     return true;
 }
+
 
     function completarPago() {
         const articulos = compras.map(compra => {
